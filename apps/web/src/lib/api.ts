@@ -3,7 +3,23 @@
  * 백엔드 API 호출을 위한 함수 모음
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://notsponsoredbackend-production.up.railway.app";
+function getApiBase(): string {
+  // 1. 환경변수가 명시적으로 설정되어 있으면 사용
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  // 2. 브라우저 환경에서 Railway 도메인이면 프로덕션 백엔드 사용
+  if (typeof window !== "undefined") {
+    const hostname = window.location.hostname;
+    if (hostname.includes("railway.app")) {
+      return "https://notsponsoredbackend-production.up.railway.app";
+    }
+  }
+  // 3. 로컬 개발 환경
+  return "http://localhost:8000";
+}
+
+const API_BASE = getApiBase();
 
 /** 검색 결과 소스 타입 */
 export interface SourceResult {
