@@ -3,7 +3,7 @@
  * 백엔드 API 호출을 위한 함수 모음
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://notsponsoredbackend-production.up.railway.app";
 
 /** 검색 결과 소스 타입 */
 export interface SourceResult {
