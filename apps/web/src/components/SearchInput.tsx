@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
+import { getTrendingSearches } from "@/lib/api";
 
 interface Props {
     onSearch: (query: string) => void;
     isLoading?: boolean;
 }
 
-/** 예시 검색어 칩 */
-const EXAMPLE_QUERIES = [
+/** 예시 검색어 칩 (Fallback) */
+const FALLBACK_QUERIES = [
     "아이폰17",
     "나이키 페가수스 42",
     "쿠션 파운데이션",
@@ -19,6 +20,17 @@ const EXAMPLE_QUERIES = [
 
 export default function SearchInput({ onSearch, isLoading }: Props) {
     const [query, setQuery] = useState("");
+    const [trendingQueries, setTrendingQueries] = useState<string[]>(FALLBACK_QUERIES);
+
+    useEffect(() => {
+        async function fetchTrending() {
+            const queries = await getTrendingSearches();
+            if (queries && queries.length > 0) {
+                setTrendingQueries(queries);
+            }
+        }
+        fetchTrending();
+    }, []);
 
     const handleSubmit = (e: FormEvent) => {
         e.preventDefault();
@@ -72,7 +84,7 @@ export default function SearchInput({ onSearch, isLoading }: Props) {
 
             {/* 예시 검색어 칩 */}
             <div className="mt-6 flex flex-wrap gap-2.5 justify-center" role="group" aria-label="추천 검색어">
-                {EXAMPLE_QUERIES.map((eq) => (
+                {trendingQueries.map((eq) => (
                     <button
                         key={eq}
                         type="button"

@@ -9,7 +9,7 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from app.database import get_db
 from app.models.search import QueryJob, SourceResult, JobStatus
 from app.schemas.search import (
@@ -53,6 +53,43 @@ async def create_search(
     background_tasks.add_task(_run_pipeline_with_session, job.id, req.query)
 
     return SearchJobResponse(job_id=job.id, status=job.status)
+
+
+@router.get("/trending", response_model=list[str])
+async def get_trending_searches(
+    db: AsyncSession = Depends(get_db),
+):
+    """최근 가장 많이 검색된 인기 검색어 반환"""
+    # 1. 완료된 작업 중 가장 많이 검색된 raw_query 상위 6개 추출
+    query = (
+        select(QueryJob.raw_query)
+        .where(QueryJob.status == JobStatus.COMPLETED.value)
+        .group_by(QueryJob.raw_query)
+        .order_by(func.count(QueryJob.id).desc())
+        .limit(6)
+    )
+    result = await db.execute(query)
+    trending = result.scalars().all()
+
+    # 2. 결과가 부족할 경우를 대비한 기본 검색어 목록
+    default_queries = [
+        "아이폰17",
+        "나이키 페가수스 42",
+        "쿠션 파운데이션",
+        "에어프라이어",
+        "갤럭시 S26",
+        "건성 피부 선크림",
+    ]
+
+    # 3. DB 결과와 기본 리스트 병합 (중복 제거하며 최대 6개 채우기)
+    final_queries = list(trending)
+    for q in default_queries:
+        if len(final_queries) >= 6:
+            break
+        if q not in final_queries:
+            final_queries.append(q)
+
+    return final_queries
 
 
 @router.get("/{job_id}", response_model=SearchJobDetailResponse)

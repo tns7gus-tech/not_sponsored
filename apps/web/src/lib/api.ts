@@ -169,3 +169,27 @@ export const PLATFORM_COLORS: Record<string, string> = {
   youtube: "#FF0000",
   web: "#4285F4",
 };
+
+/** 트렌딩 검색어 가져오기 */
+export async function getTrendingSearches(): Promise<string[]> {
+  try {
+    const res = await fetch(`${API_BASE}/api/search/trending`, {
+      // 짧은 캐싱 또는 필요 시 no-cache 적용 가능
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to fetch trending searches: ${res.status}`);
+    }
+    return res.json();
+  } catch (error) {
+    console.warn("트렌딩 검색어를 가져오는데 실패했습니다. 기본값을 사용합니다.", error);
+    return [
+      "아이폰17",
+      "나이키 페가수스 42",
+      "쿠션 파운데이션",
+      "에어프라이어",
+      "갤럭시 S26",
+      "건성 피부 선크림",
+    ];
+  }
+}
