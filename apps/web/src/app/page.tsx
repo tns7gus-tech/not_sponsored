@@ -23,7 +23,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen px-4">
+    <main id="main-content" className="flex flex-col items-center justify-center min-h-screen px-4">
       {/* 로고 + 타이틀 */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 mb-4">

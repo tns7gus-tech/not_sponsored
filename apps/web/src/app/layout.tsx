@@ -16,8 +16,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="bg-gray-950 text-white antialiased min-h-screen" style={{ fontFamily: "'Inter', sans-serif" }}>
+        {/* Skip to Main Content (웹 접근성) */}
+        <a
+          href="#main-content"
+          className="absolute top-0 left-0 -translate-y-full focus:translate-y-0 bg-emerald-500 text-white px-4 py-2 z-50 transition-transform"
+        >
+          본문으로 건너뛰기
+        </a>
+
         {/* 배경 그라디언트 */}
-        <div className="fixed inset-0 -z-10">
+        <div className="fixed inset-0 -z-10" aria-hidden="true">
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
         </div>

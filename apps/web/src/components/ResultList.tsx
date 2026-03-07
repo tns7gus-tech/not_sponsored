@@ -29,12 +29,14 @@ export default function ResultList({ results, platforms }: Props) {
             </div>
 
             {/* 플랫폼 필터 */}
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex flex-wrap gap-2.5 mb-6" role="group" aria-label="플랫폼 필터">
                 <button
+                    type="button"
                     onClick={() => setSelectedPlatform(null)}
-                    className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${!selectedPlatform
-                            ? "bg-white/10 border-white/20 text-white"
-                            : "bg-gray-800/40 border-gray-700/30 text-gray-500 hover:text-gray-300"
+                    aria-pressed={selectedPlatform === null}
+                    className={`px-4 py-2 min-h-[40px] rounded-lg text-sm border font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all ${!selectedPlatform
+                        ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
+                        : "bg-gray-800/40 border-gray-700/50 text-gray-400 hover:bg-gray-700/60 hover:text-white"
                         }`}
                 >
                     전체 ({results.length})
@@ -44,10 +46,12 @@ export default function ResultList({ results, platforms }: Props) {
                     return (
                         <button
                             key={p}
+                            type="button"
                             onClick={() => setSelectedPlatform(selectedPlatform === p ? null : p)}
-                            className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${selectedPlatform === p
-                                    ? "bg-white/10 border-white/20 text-white"
-                                    : "bg-gray-800/40 border-gray-700/30 text-gray-500 hover:text-gray-300"
+                            aria-pressed={selectedPlatform === p}
+                            className={`px-4 py-2 min-h-[40px] rounded-lg text-sm border font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all ${selectedPlatform === p
+                                ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
+                                : "bg-gray-800/40 border-gray-700/50 text-gray-400 hover:bg-gray-700/60 hover:text-white"
                                 }`}
                         >
                             {PLATFORM_LABELS[p] || p} ({count})
@@ -57,11 +61,13 @@ export default function ResultList({ results, platforms }: Props) {
             </div>
 
             {/* 결과 카드 리스트 */}
-            <div className="space-y-3">
+            <ul className="space-y-4">
                 {filtered.map((result) => (
-                    <ResultCard key={result.id} result={result} />
+                    <li key={result.id}>
+                        <ResultCard result={result} />
+                    </li>
                 ))}
-            </div>
+            </ul>
 
             {filtered.length === 0 && (
                 <div className="text-center py-12">

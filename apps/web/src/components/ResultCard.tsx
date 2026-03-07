@@ -39,7 +39,7 @@ export default function ResultCard({ result }: Props) {
                 </div>
 
                 {/* 제목 */}
-                <h3 className="text-white font-medium text-sm leading-relaxed mb-2 group-hover:text-emerald-300 transition-colors">
+                <h3 className="text-white font-medium text-base leading-relaxed mb-2 group-hover:text-emerald-300 transition-colors">
                     {result.title}
                 </h3>
 
@@ -52,21 +52,22 @@ export default function ResultCard({ result }: Props) {
 
                 {/* 스니펫 */}
                 {result.snippet && (
-                    <p className="text-gray-400 text-sm leading-relaxed line-clamp-3 mb-4">
+                    <p className="text-gray-300 text-sm leading-relaxed line-clamp-3 mb-4">
                         {result.snippet}
                     </p>
                 )}
 
                 {/* 하단: 원문 보기 버튼 */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-2">
                     <a
                         href={result.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                        aria-label={`원문 보기: ${result.title} (새 창에서 열림)`}
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-cyan-400 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-gray-900 rounded-sm transition-colors py-1"
                     >
                         원문 보기
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
                     </a>
