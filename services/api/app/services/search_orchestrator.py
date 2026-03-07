@@ -47,33 +47,26 @@ async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> 
         job.sources_plan_json = expansion["source_plan"]
         await db.commit()
 
-        # 2. 병렬 소스 검색
+        # 2. 소스 검색 (NAVER는 순차, YouTube는 병렬)
         logger.info(f"[{job_id}] 소스 검색 시작")
         source_plan = expansion["source_plan"]
 
-        search_tasks = []
-        # NAVER 커넥터들
+        # NAVER 커넥터들 (순차 실행 - Rate limit 방지)
+        naver_results = []
         for source_type in ["naver_blog", "naver_cafe", "naver_news", "naver_shopping"]:
             queries = source_plan.get(source_type, [])
             if queries:
-                search_tasks.append(
-                    _safe_search(search_naver, source_type, queries)
-                )
+                results = await _safe_search(search_naver, source_type, queries)
+                naver_results.extend(results)
 
-        # YouTube 커넥터
+        # YouTube 커넥터 (독립 실행)
+        yt_results = []
         yt_queries = source_plan.get("youtube", [])
         if yt_queries:
-            search_tasks.append(
-                _safe_search_youtube(yt_queries)
-            )
-
-        # 병렬 실행
-        results_lists = await asyncio.gather(*search_tasks)
+            yt_results = await _safe_search_youtube(yt_queries)
 
         # 결과 합치기
-        all_results = []
-        for result_list in results_lists:
-            all_results.extend(result_list)
+        all_results = naver_results + yt_results
 
         logger.info(f"[{job_id}] 총 {len(all_results)}건 수집 완료")
 

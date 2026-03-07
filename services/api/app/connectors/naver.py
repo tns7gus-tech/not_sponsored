@@ -5,6 +5,7 @@ NAVER Search API 커넥터
 NAVER 검색 API (블로그, 카페, 뉴스, 쇼핑) 결과 수집
 Ref: https://developers.naver.com/docs/serviceapi/search/blog/blog.md
 """
+import asyncio
 import logging
 import httpx
 from typing import Optional
@@ -93,7 +94,7 @@ async def search_naver(
     display: int = 10,
 ) -> list[dict]:
     """
-    NAVER 검색 API 호출
+    NAVER 검색 API 호출 (Rate limit 대응 포함)
 
     Args:
         source_type: 소스 타입 (naver_blog, naver_cafe, naver_news, naver_shopping)
@@ -119,27 +120,44 @@ async def search_naver(
     all_results = []
     headers = _get_headers()
 
+    # Rate limit 방지: 소스 타입당 최대 3개 질의만 사용
+    limited_queries = queries[:3]
+
     async with httpx.AsyncClient(timeout=10.0) as client:
-        for query in queries:
-            try:
-                response = await client.get(
-                    endpoint,
-                    headers=headers,
-                    params={
-                        "query": query,
-                        "display": display,
-                        "sort": "sim",  # 정확도순
-                    },
-                )
-                response.raise_for_status()
-                data = response.json()
-                items = data.get("items", [])
-                all_results.extend(items)
-                logger.info(f"NAVER {source_type} '{query}': {len(items)}건 수집")
-            except httpx.HTTPStatusError as e:
-                logger.error(f"NAVER API 에러 ({source_type}, '{query}'): {e.response.status_code}")
-            except httpx.RequestError as e:
-                logger.error(f"NAVER 요청 실패 ({source_type}, '{query}'): {e}")
+        for i, query in enumerate(limited_queries):
+            # 첫 번째 요청 이후 300ms 딜레이 (Rate limit 방지)
+            if i > 0:
+                await asyncio.sleep(0.3)
+
+            # 최대 2회 재시도 (429 대응)
+            for attempt in range(3):
+                try:
+                    response = await client.get(
+                        endpoint,
+                        headers=headers,
+                        params={
+                            "query": query,
+                            "display": display,
+                            "sort": "sim",  # 정확도순
+                        },
+                    )
+                    if response.status_code == 429:
+                        wait_time = (attempt + 1) * 0.5
+                        logger.warning(f"NAVER 429 Rate Limit ({source_type}, '{query}') - {wait_time}초 후 재시도")
+                        await asyncio.sleep(wait_time)
+                        continue
+                    response.raise_for_status()
+                    data = response.json()
+                    items = data.get("items", [])
+                    all_results.extend(items)
+                    logger.info(f"NAVER {source_type} '{query}': {len(items)}건 수집")
+                    break  # 성공 시 재시도 루프 탈출
+                except httpx.HTTPStatusError as e:
+                    logger.error(f"NAVER API 에러 ({source_type}, '{query}'): {e.response.status_code}")
+                    break  # 429 외의 에러는 재시도하지 않음
+                except httpx.RequestError as e:
+                    logger.error(f"NAVER 요청 실패 ({source_type}, '{query}'): {e}")
+                    break
 
     return _normalize_naver_results(source_type, all_results)
 
