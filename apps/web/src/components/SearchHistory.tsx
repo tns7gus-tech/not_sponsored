@@ -20,6 +20,7 @@ export default function SearchHistory({ onHistoryClick }: Props) {
         if (stored) {
             try {
                 const parsed = JSON.parse(stored) as SearchHistoryItem[];
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setHistory(parsed);
             } catch {
                 // Ignore parse errors

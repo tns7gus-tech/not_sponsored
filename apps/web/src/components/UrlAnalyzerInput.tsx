@@ -7,10 +7,6 @@ interface Props {
     isLoading?: boolean;
 }
 
-const EXAMPLE_URLS = [
-    "https://m.blog.naver.com/...", // 예시 URL 
-];
-
 export default function UrlAnalyzerInput({ onAnalyze, isLoading }: Props) {
     const [url, setUrl] = useState("");
 
