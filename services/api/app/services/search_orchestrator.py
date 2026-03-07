@@ -8,9 +8,11 @@ import asyncio
 import logging
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.search import QueryJob, SourceResult, JobStatus
+from app.models.search import QueryJob, SourceResult, JobStatus, ExtractedSignal
 from app.services.query_expander import expand_queries
-from app.services.normalizer import deduplicate_results, sort_results, build_summary
+from app.services.normalizer import deduplicate_results, sort_results, build_summary, build_summary_from_models
+from app.services.signal_extractor import extract_signals
+from app.services.scoring import calculate_scores
 from app.connectors.naver import search_naver
 from app.connectors.youtube import search_youtube
 
@@ -71,9 +73,10 @@ async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> 
         unique_results = deduplicate_results(all_results)
         sorted_results = sort_results(unique_results)
 
-        # 4. DB 저장
+        # 4. DB 저장 및 신호 추출
+        saved_models = []
         for r in sorted_results:
-            db.add(SourceResult(
+            result_obj = SourceResult(
                 query_job_id=job_id,
                 platform=r.get("platform", "unknown"),
                 url=r.get("url", ""),
@@ -85,10 +88,39 @@ async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> 
                 media_types=r.get("media_types"),
                 engagement_json=r.get("engagement_json"),
                 raw_payload_json=r.get("raw_payload_json"),
-            ))
+            )
+            
+            # 신호 추출
+            extracted = extract_signals(
+                title=result_obj.title,
+                snippet=result_obj.snippet or "",
+                platform=result_obj.platform
+            )
+            
+            signal_models = []
+            for sig in extracted:
+                signal_obj = ExtractedSignal(
+                    signal_type=sig["signal_type"],
+                    signal_group=sig["signal_group"],
+                    confidence=sig["confidence"],
+                    matched_text=sig["matched_text"]
+                )
+                signal_models.append(signal_obj)
+                result_obj.extracted_signals.append(signal_obj)
+                
+            # 신뢰도 점수 계산
+            scores = calculate_scores(signal_models)
+            result_obj.crs = scores["crs"]
+            result_obj.eqs = scores["eqs"]
+            result_obj.tss = scores["tss"]
+            result_obj.tier = scores["tier"]
+            result_obj.explanations_json = scores["explanation"]
+                
+            db.add(result_obj)
+            saved_models.append(result_obj)
 
         # 5. 완료 처리
-        summary = build_summary(sorted_results)
+        summary = build_summary_from_models(saved_models)
         job.summary_json = summary
         job.total_results = len(sorted_results)
         job.status = JobStatus.COMPLETED.value

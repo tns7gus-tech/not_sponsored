@@ -106,20 +106,104 @@ export default function SearchResultsPage({
             {isDone && data && (
                 <>
                     {/* 요약 카드 */}
-                    <div className="max-w-3xl mx-auto mb-6">
+                    <div className="max-w-3xl mx-auto mb-8 space-y-4">
                         <div className="bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-gray-700/40 p-6">
-                            <div className="flex items-center gap-3 mb-2">
-                                <h2 className="text-white text-lg font-semibold">
-                                    {data.query} 리서치 결과
-                                </h2>
-                                <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-md text-xs">
-                                    완료
-                                </span>
+                            <div className="flex items-center justify-between mb-6 border-b border-gray-700/50 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <h2 className="text-white text-lg font-semibold">
+                                        {data.query} 리서치 요약
+                                    </h2>
+                                    {data.summary?.overall_status === "HIGH_TRUST" && (
+                                        <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-md text-xs font-bold">
+                                            우수 (신뢰도 높음)
+                                        </span>
+                                    )}
+                                    {data.summary?.overall_status === "AD_DENSE" && (
+                                        <span className="px-2.5 py-1 bg-red-500/10 border border-red-500/30 text-red-400 rounded-md text-xs font-bold">
+                                            주의 (광고 많음)
+                                        </span>
+                                    )}
+                                    {data.summary?.overall_status === "CAUTION" && (
+                                        <span className="px-2.5 py-1 bg-orange-500/10 border border-orange-500/30 text-orange-400 rounded-md text-xs font-bold">
+                                            교차 검증 필요
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-gray-400 text-sm">
+                                    총 <span className="text-white font-medium">{data.summary?.total_results || 0}</span>건 분석 완료
+                                </p>
                             </div>
-                            <p className="text-gray-400 text-sm">
-                                {data.summary?.platforms.length || 0}개 소스에서{" "}
-                                <span className="text-white font-medium">{data.summary?.total_results || 0}개</span>의 결과를 수집했습니다
-                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* 장단점 요약 */}
+                                <div className="space-y-6">
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                            주요 장점 / 실사용 인증
+                                        </h3>
+                                        <ul className="space-y-2">
+                                            {data.summary?.pros && data.summary.pros.length > 0 ? (
+                                                data.summary.pros.map((pro, i) => (
+                                                    <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
+                                                        <span className="text-emerald-500 mt-0.5">•</span>
+                                                        <span className="leading-snug">{pro}</span>
+                                                    </li>
+                                                ))
+                                            ) : (
+                                                <li className="text-sm text-gray-500">추출된 실사용 장점 신호가 없습니다.</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-red-400 mb-3 flex items-center gap-2">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                            주요 단점 / 아쉬운 점
+                                        </h3>
+                                        <ul className="space-y-2">
+                                            {data.summary?.cons && data.summary.cons.length > 0 ? (
+                                                data.summary.cons.map((con, i) => (
+                                                    <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
+                                                        <span className="text-red-500 mt-0.5">•</span>
+                                                        <span className="leading-snug">{con}</span>
+                                                    </li>
+                                                ))
+                                            ) : (
+                                                <li className="text-sm text-gray-500">추출된 단점 신호가 없습니다.</li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* 등급 분포 */}
+                                <div className="bg-gray-800/30 rounded-xl p-5 border border-gray-700/30">
+                                    <h3 className="text-sm font-semibold text-gray-300 mb-4">신뢰도 등급 분포</h3>
+                                    <div className="space-y-3.5">
+                                        {[
+                                            { tier: 'S', label: '매우 높음', color: 'bg-emerald-500' },
+                                            { tier: 'A', label: '높음', color: 'bg-blue-500' },
+                                            { tier: 'B', label: '보통', color: 'bg-yellow-500' },
+                                            { tier: 'C', label: '낮음', color: 'bg-orange-500' },
+                                            { tier: 'F', label: '광고 의심', color: 'bg-red-500' }
+                                        ].map(({ tier, label, color }) => {
+                                            const count = data.summary?.tier_distribution?.[tier] || 0;
+                                            const maxCount = Math.max(1, ...(Object.values(data.summary?.tier_distribution || { S: 0, A: 0, B: 0, C: 0, F: 0 }) as number[]));
+                                            const percentage = (count / maxCount) * 100;
+                                            return (
+                                                <div key={tier} className="flex items-center gap-3 text-sm">
+                                                    <div className="w-14 items-center flex gap-1">
+                                                        <span className="font-bold text-gray-400 w-3">{tier}</span>
+                                                    </div>
+                                                    <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+                                                        <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${percentage}%` }} />
+                                                    </div>
+                                                    <div className="w-8 text-right text-gray-300 font-medium">{count}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

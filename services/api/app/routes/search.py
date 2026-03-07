@@ -7,7 +7,7 @@ GET  /api/search/{job_id} - 검색 결과 조회
 """
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.database import get_db
@@ -22,6 +22,7 @@ from app.schemas.search import (
     EngagementData,
 )
 from app.services.search_orchestrator import run_search_pipeline
+from app.limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,9 @@ router = APIRouter(prefix="/api/search", tags=["검색"])
 
 
 @router.post("", response_model=SearchJobResponse)
+@limiter.limit("5/minute")
 async def create_search(
+    request: Request,
     req: SearchRequest,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
@@ -94,6 +97,11 @@ async def get_search_results(
                 snippet=sr.snippet,
                 media_types=sr.media_types,
                 engagement=engagement,
+                crs=sr.crs,
+                eqs=sr.eqs,
+                tss=sr.tss,
+                tier=sr.tier,
+                explanations=sr.explanations_json if sr.explanations_json else [],
             )
         )
 

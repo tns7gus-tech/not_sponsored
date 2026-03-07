@@ -36,6 +36,12 @@ export interface SourceResult {
     comments?: number;
     views?: number;
   };
+  crs?: number;
+  eqs?: number;
+  scs?: number;
+  tss?: number;
+  tier?: string;
+  explanations?: string[];
 }
 
 /** 검색 진행 상태 */
@@ -49,6 +55,10 @@ export interface SearchProgress {
 export interface SearchSummary {
   total_results: number;
   platforms: string[];
+  tier_distribution?: Record<string, number>;
+  pros?: string[];
+  cons?: string[];
+  overall_status?: string;
 }
 
 /** 검색 작업 상세 응답 */
@@ -86,6 +96,57 @@ export async function getSearchResults(
   const url = `${API_BASE}/api/search/${jobId}${params.toString() ? `?${params}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`결과 조회 실패: ${res.status}`);
+  return res.json();
+}
+
+/** URL 분석 작업 상세 응답 */
+export interface UrlAnalysisJobDetail {
+  job_id: string;
+  status: "queued" | "running" | "completed" | "failed";
+  url: string;
+  result?: SourceResult;
+  created_at?: string;
+  finished_at?: string;
+  error_message?: string;
+}
+
+/** URL 분석 시작 */
+export async function createUrlAnalysis(url: string): Promise<{ job_id: string; status: string }> {
+  const res = await fetch(`${API_BASE}/api/analyze-url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) throw new Error(`URL 분석 요청 실패: ${res.status}`);
+  return res.json();
+}
+
+/** URL 분석 결과 조회 */
+export async function getUrlAnalysis(
+  jobId: string
+): Promise<UrlAnalysisJobDetail> {
+  const url = `${API_BASE}/api/analyze-url/${jobId}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`분석 결과 조회 실패: ${res.status}`);
+  return res.json();
+}
+
+/** 사용자 피드백 제출 */
+export async function submitFeedback(
+  feedbackType: "helpful" | "ad_suspected",
+  sourceResultId?: string,
+  url?: string
+): Promise<{ id: string; status: string }> {
+  const res = await fetch(`${API_BASE}/api/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      feedback_type: feedbackType,
+      source_result_id: sourceResultId,
+      url: url,
+    }),
+  });
+  if (!res.ok) throw new Error(`피드백 제출 실패: ${res.status}`);
   return res.json();
 }
 

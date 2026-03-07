@@ -1,79 +1,111 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { PLATFORM_LABELS, type SourceResult } from "@/lib/api";
 import ResultCard from "./ResultCard";
+import CompareModal from "./CompareModal";
+import ResultFilterBar from "./ResultFilterBar";
+import CompareBasket from "./CompareBasket";
 
 interface Props {
     results: SourceResult[];
     platforms: string[];
 }
 
+type SortOption = "relevance" | "trust";
+
 export default function ResultList({ results, platforms }: Props) {
     const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+    const [sortBy, setSortBy] = useState<SortOption>("trust");
+    const [showHighTrustOnly, setShowHighTrustOnly] = useState(false);
 
-    const filtered = selectedPlatform
-        ? results.filter((r) => r.platform === selectedPlatform)
-        : results;
+    // 비교 장바구니 상태
+    const [compareList, setCompareList] = useState<SourceResult[]>([]);
+    const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
+
+    const handleCompareToggle = (result: SourceResult) => {
+        setCompareList(prev => {
+            const isExist = prev.some(item => item.id === result.id);
+            if (isExist) {
+                return prev.filter(item => item.id !== result.id);
+            } else {
+                if (prev.length >= 3) return prev; // 최대 3개
+                return [...prev, result];
+            }
+        });
+    };
+
+    const processedResults = useMemo(() => {
+        let filtered = results;
+
+        // 1. 플랫폼 필터
+        if (selectedPlatform) {
+            filtered = filtered.filter((r) => r.platform === selectedPlatform);
+        }
+
+        // 2. 고신뢰도(S/A) 필터
+        if (showHighTrustOnly) {
+            filtered = filtered.filter((r) => r.tier === "S" || r.tier === "A");
+        }
+
+        // 3. 정렬
+        return [...filtered].sort((a, b) => {
+            if (sortBy === "trust") {
+                // TSS 높은 순 (단, 내림차순)
+                return (b.tss || 0) - (a.tss || 0);
+            }
+            // relevance: 원본 배열 유지 (API에서 이미 섞어뒀으므로 기본 정렬 사용)
+            return 0;
+        });
+    }, [results, selectedPlatform, sortBy, showHighTrustOnly]);
 
     return (
         <div className="w-full max-w-3xl mx-auto mt-6">
-            {/* 요약 바 */}
-            <div className="flex items-center justify-between mb-6 px-1">
-                <p className="text-gray-400 text-sm">
-                    총 <span className="text-white font-medium">{results.length}개</span> 결과 수집
-                </p>
-                <p className="text-gray-500 text-xs">
-                    {platforms.length}개 소스에서 검색
-                </p>
-            </div>
-
-            {/* 플랫폼 필터 */}
-            <div className="flex flex-wrap gap-2.5 mb-6" role="group" aria-label="플랫폼 필터">
-                <button
-                    type="button"
-                    onClick={() => setSelectedPlatform(null)}
-                    aria-pressed={selectedPlatform === null}
-                    className={`px-4 py-2 min-h-[40px] rounded-lg text-sm border font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all ${!selectedPlatform
-                        ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
-                        : "bg-gray-800/40 border-gray-700/50 text-gray-400 hover:bg-gray-700/60 hover:text-white"
-                        }`}
-                >
-                    전체 ({results.length})
-                </button>
-                {platforms.map((p) => {
-                    const count = results.filter((r) => r.platform === p).length;
-                    return (
-                        <button
-                            key={p}
-                            type="button"
-                            onClick={() => setSelectedPlatform(selectedPlatform === p ? null : p)}
-                            aria-pressed={selectedPlatform === p}
-                            className={`px-4 py-2 min-h-[40px] rounded-lg text-sm border font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-all ${selectedPlatform === p
-                                ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
-                                : "bg-gray-800/40 border-gray-700/50 text-gray-400 hover:bg-gray-700/60 hover:text-white"
-                                }`}
-                        >
-                            {PLATFORM_LABELS[p] || p} ({count})
-                        </button>
-                    );
-                })}
-            </div>
+            {/* 필터 및 정렬 바 */}
+            <ResultFilterBar
+                totalResults={processedResults.length}
+                showHighTrustOnly={showHighTrustOnly}
+                setShowHighTrustOnly={setShowHighTrustOnly}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                platforms={platforms}
+                selectedPlatform={selectedPlatform}
+                setSelectedPlatform={setSelectedPlatform}
+                platformLabels={PLATFORM_LABELS}
+                getPlatformCount={(p) => results.filter((r) => r.platform === p).length}
+            />
 
             {/* 결과 카드 리스트 */}
-            <ul className="space-y-4">
-                {filtered.map((result) => (
-                    <li key={result.id}>
-                        <ResultCard result={result} />
-                    </li>
-                ))}
+            <ul className="space-y-4 pb-24">
+                {processedResults.map((result) => {
+                    const isComparing = compareList.some((c) => c.id === result.id);
+                    const disabledCompare = compareList.length >= 3;
+                    return (
+                        <li key={result.id}>
+                            <ResultCard
+                                result={result}
+                                isComparing={isComparing}
+                                onCompareToggle={() => handleCompareToggle(result)}
+                                disabledCompare={disabledCompare}
+                            />
+                        </li>
+                    )
+                })}
             </ul>
 
-            {filtered.length === 0 && (
-                <div className="text-center py-12">
-                    <p className="text-gray-500">결과가 없습니다</p>
-                </div>
-            )}
+            {/* 비교함 (Floating Action Basket) */}
+            <CompareBasket
+                compareList={compareList}
+                setCompareList={setCompareList}
+                setIsCompareModalOpen={setIsCompareModalOpen}
+            />
+
+            {/* 대조 모달 */}
+            <CompareModal
+                isOpen={isCompareModalOpen}
+                onClose={() => setIsCompareModalOpen(false)}
+                comparedItems={compareList}
+            />
         </div>
     );
 }

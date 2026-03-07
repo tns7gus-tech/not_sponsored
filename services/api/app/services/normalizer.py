@@ -57,3 +57,48 @@ def build_summary(results: list[dict]) -> dict:
         "total_results": len(results),
         "platforms": platforms,
     }
+
+def build_summary_from_models(results: list) -> dict:
+    """결과 요약 정보 생성 (Sprint 2: 신뢰도 및 신호 기반)"""
+    if not results:
+        return {"total_results": 0, "platforms": [], "tier_distribution": {}, "pros": [], "cons": [], "overall_status": "UNKNOWN"}
+
+    platforms = list(set(r.platform for r in results))
+    total_results = len(results)
+    
+    tier_distribution = {"S": 0, "A": 0, "B": 0, "C": 0, "F": 0}
+    pros = []
+    cons = []
+    
+    for r in results:
+        if r.tier in tier_distribution:
+            tier_distribution[r.tier] += 1
+            
+        for sig in r.extracted_signals:
+            if sig.signal_type == "REAL_DRAWBACK":
+                cons.append(f"단점 리포트: '{sig.matched_text}' ({r.platform})")
+            elif sig.signal_group == "REAL_USAGE":
+                pros.append(f"실사용 인증: '{sig.matched_text}' ({r.platform})")
+
+    # 중복 제거 및 최대 3개 매핑
+    unique_cons = list(dict.fromkeys(cons))[:3]
+    unique_pros = list(dict.fromkeys(pros))[:3]
+    
+    high_trust_count = tier_distribution.get("S", 0) + tier_distribution.get("A", 0)
+    ad_count = tier_distribution.get("F", 0)
+    
+    if ad_count > (total_results * 0.5):
+        overall = "AD_DENSE"
+    elif high_trust_count >= (total_results * 0.3):
+        overall = "HIGH_TRUST"
+    else:
+        overall = "CAUTION"
+
+    return {
+        "total_results": total_results,
+        "platforms": platforms,
+        "tier_distribution": tier_distribution,
+        "pros": unique_pros,
+        "cons": unique_cons,
+        "overall_status": overall
+    }

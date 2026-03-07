@@ -37,6 +37,13 @@ class SourceResultResponse(BaseModel):
     snippet: Optional[str] = None
     media_types: Optional[List[str]] = None
     engagement: Optional[EngagementData] = None
+    
+    # 신뢰도 스코어 (Sprint 2)
+    crs: Optional[int] = None
+    eqs: Optional[int] = None
+    tss: Optional[int] = None
+    tier: Optional[str] = None
+    explanations: Optional[List[str]] = Field(default_factory=list)
 
 
 class SearchProgressResponse(BaseModel):
