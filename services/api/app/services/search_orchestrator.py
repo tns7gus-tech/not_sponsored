@@ -19,12 +19,12 @@ logger = logging.getLogger(__name__)
 
 async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> None:
     """
-    검색 파이프라인 실행 (동기 처리 - MVP)
+    검색 파이프라인 실행
 
-    Args:
-        job_id: 검색 작업 ID
-        raw_query: 원본 검색어
-        db: DB 세션
+    병렬 전략:
+    - NAVER 4개 소스 (blog, cafe, news, shopping) 동시 실행
+    - YouTube 동시 실행
+    - 총 5개 코루틴을 asyncio.gather로 한 번에
     """
     try:
         # 작업 상태 → running
@@ -37,7 +37,7 @@ async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> 
         await db.commit()
 
         # 1. 질의 확장
-        logger.info(f"[{job_id}] 질의 확장 시작: '{raw_query}'")
+        logger.info(f"[{job_id}] 질의 확장: '{raw_query}'")
         expansion = expand_queries(raw_query)
         job.normalized_query = expansion["normalized_query"]
         job.expanded_queries_json = {
@@ -47,26 +47,23 @@ async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> 
         job.sources_plan_json = expansion["source_plan"]
         await db.commit()
 
-        # 2. 소스 검색 (NAVER는 순차, YouTube는 병렬)
-        logger.info(f"[{job_id}] 소스 검색 시작")
+        # 2. 전체 병렬 검색 (NAVER 4개 + YouTube 1개 동시 실행)
+        logger.info(f"[{job_id}] 병렬 검색 시작 (5개 소스 동시)")
         source_plan = expansion["source_plan"]
 
-        # NAVER 커넥터들 (순차 실행 - Rate limit 방지)
-        naver_results = []
-        for source_type in ["naver_blog", "naver_cafe", "naver_news", "naver_shopping"]:
-            queries = source_plan.get(source_type, [])
-            if queries:
-                results = await _safe_search(search_naver, source_type, queries)
-                naver_results.extend(results)
+        tasks = [
+            _safe_search(search_naver, "naver_blog",     source_plan.get("naver_blog", [])),
+            _safe_search(search_naver, "naver_cafe",     source_plan.get("naver_cafe", [])),
+            _safe_search(search_naver, "naver_news",     source_plan.get("naver_news", [])),
+            _safe_search(search_naver, "naver_shopping", source_plan.get("naver_shopping", [])),
+            _safe_search_youtube(source_plan.get("youtube", [])),
+        ]
 
-        # YouTube 커넥터 (독립 실행)
-        yt_results = []
-        yt_queries = source_plan.get("youtube", [])
-        if yt_queries:
-            yt_results = await _safe_search_youtube(yt_queries)
+        results_lists = await asyncio.gather(*tasks)
 
-        # 결과 합치기
-        all_results = naver_results + yt_results
+        all_results = []
+        for result_list in results_lists:
+            all_results.extend(result_list)
 
         logger.info(f"[{job_id}] 총 {len(all_results)}건 수집 완료")
 
@@ -76,7 +73,7 @@ async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> 
 
         # 4. DB 저장
         for r in sorted_results:
-            source_result = SourceResult(
+            db.add(SourceResult(
                 query_job_id=job_id,
                 platform=r.get("platform", "unknown"),
                 url=r.get("url", ""),
@@ -88,10 +85,9 @@ async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> 
                 media_types=r.get("media_types"),
                 engagement_json=r.get("engagement_json"),
                 raw_payload_json=r.get("raw_payload_json"),
-            )
-            db.add(source_result)
+            ))
 
-        # 5. 작업 완료 처리
+        # 5. 완료 처리
         summary = build_summary(sorted_results)
         job.summary_json = summary
         job.total_results = len(sorted_results)
@@ -116,6 +112,8 @@ async def run_search_pipeline(job_id: str, raw_query: str, db: AsyncSession) -> 
 
 async def _safe_search(search_fn, source_type: str, queries: list[str]) -> list[dict]:
     """커넥터 실패 시에도 빈 리스트 반환 (부분 실패 허용)"""
+    if not queries:
+        return []
     try:
         return await search_fn(source_type, queries)
     except Exception as e:
@@ -125,6 +123,8 @@ async def _safe_search(search_fn, source_type: str, queries: list[str]) -> list[
 
 async def _safe_search_youtube(queries: list[str]) -> list[dict]:
     """YouTube 커넥터 안전 래퍼"""
+    if not queries:
+        return []
     try:
         return await search_youtube(queries)
     except Exception as e:

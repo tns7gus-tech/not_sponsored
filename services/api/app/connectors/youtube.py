@@ -4,6 +4,7 @@ YouTube Data API 커넥터
 YouTube 검색 결과 수집
 Ref: https://developers.google.com/youtube/v3/docs/search/list
 """
+import asyncio
 import logging
 import httpx
 from app.config import settings
@@ -60,7 +61,7 @@ def _has_api_key() -> bool:
 
 async def search_youtube(queries: list[str], max_results: int = 5) -> list[dict]:
     """
-    YouTube 검색 API 호출
+    YouTube 검색 API 호출 (병렬 실행)
 
     Args:
         queries: 검색 질의 리스트
@@ -74,33 +75,35 @@ async def search_youtube(queries: list[str], max_results: int = 5) -> list[dict]
         logger.warning("YouTube API 키 미설정 - Mock 데이터 사용")
         return _normalize_youtube_results(MOCK_RESULTS)
 
-    all_items = []
+    async def _fetch_one(client: httpx.AsyncClient, query: str) -> list[dict]:
+        try:
+            response = await client.get(
+                YOUTUBE_SEARCH_URL,
+                params={
+                    "part": "snippet",
+                    "q": query,
+                    "type": "video",
+                    "maxResults": max_results,
+                    "order": "relevance",
+                    "key": settings.YOUTUBE_API_KEY,
+                    "relevanceLanguage": "ko",
+                },
+            )
+            response.raise_for_status()
+            items = response.json().get("items", [])
+            logger.info(f"YouTube '{query}': {len(items)}건 수집")
+            return items
+        except httpx.HTTPStatusError as e:
+            logger.error(f"YouTube API 에러 ('{query}'): {e.response.status_code}")
+            return []
+        except httpx.RequestError as e:
+            logger.error(f"YouTube 요청 실패 ('{query}'): {e}")
+            return []
 
     async with httpx.AsyncClient(timeout=10.0) as client:
-        for query in queries:
-            try:
-                response = await client.get(
-                    YOUTUBE_SEARCH_URL,
-                    params={
-                        "part": "snippet",
-                        "q": query,
-                        "type": "video",
-                        "maxResults": max_results,
-                        "order": "relevance",
-                        "key": settings.YOUTUBE_API_KEY,
-                        "relevanceLanguage": "ko",
-                    },
-                )
-                response.raise_for_status()
-                data = response.json()
-                items = data.get("items", [])
-                all_items.extend(items)
-                logger.info(f"YouTube '{query}': {len(items)}건 수집")
-            except httpx.HTTPStatusError as e:
-                logger.error(f"YouTube API 에러 ('{query}'): {e.response.status_code}")
-            except httpx.RequestError as e:
-                logger.error(f"YouTube 요청 실패 ('{query}'): {e}")
+        results = await asyncio.gather(*[_fetch_one(client, q) for q in queries])
 
+    all_items = [item for batch in results for item in batch]
     return _normalize_youtube_results(all_items)
 
 

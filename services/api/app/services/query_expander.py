@@ -134,13 +134,13 @@ def expand_queries(raw_query: str) -> dict:
             seen.add(q)
             unique_queries.append(q)
 
-    # 소스 플랜 생성
+    # 소스 플랜 생성 (소스당 최대 2개 질의 → 빠른 응답)
     source_plan = {
-        "naver_blog": unique_queries[:6],
-        "naver_cafe": unique_queries[:4],
-        "naver_news": [normalized, f"{normalized} 리뷰", f"{normalized} 이슈"],
+        "naver_blog":     unique_queries[:2],
+        "naver_cafe":     unique_queries[:2],
+        "naver_news":     [normalized, f"{normalized} 리뷰"],
         "naver_shopping": [normalized],
-        "youtube": unique_queries[:5],
+        "youtube":        unique_queries[:3],
     }
 
     logger.info(f"질의 확장 완료: {len(unique_queries)}개 생성")
