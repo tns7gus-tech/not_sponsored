@@ -1,160 +1,152 @@
 "use client";
 
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
-import { type SourceResult, PLATFORM_LABELS, PLATFORM_COLORS } from "@/lib/api";
 import { Fragment } from "react";
 
+import { PLATFORM_COLORS, PLATFORM_LABELS, type SourceResult } from "@/lib/api";
+
 interface Props {
-    isOpen: boolean;
-    onClose: () => void;
-    comparedItems: SourceResult[];
+  isOpen: boolean;
+  onClose: () => void;
+  comparedItems: SourceResult[];
 }
 
 export default function CompareModal({ isOpen, onClose, comparedItems }: Props) {
-    if (comparedItems.length === 0) return null;
+  if (comparedItems.length === 0) {
+    return null;
+  }
 
-    return (
-        <Transition show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-50" onClose={onClose}>
-                <TransitionChild
-                    as={Fragment}
-                    enter="ease-out duration-300"
-                    enterFrom="opacity-0"
-                    enterTo="opacity-100"
-                    leave="ease-in duration-200"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                >
-                    <div className="fixed inset-0 bg-gray-950/80 backdrop-blur-sm transition-opacity" />
-                </TransitionChild>
+  return (
+    <Transition show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md" />
+        </TransitionChild>
 
-                <div className="fixed inset-0 z-10 overflow-y-auto">
-                    <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-                        <TransitionChild
-                            as={Fragment}
-                            enter="ease-out duration-300"
-                            enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                            enterTo="opacity-100 translate-y-0 sm:scale-100"
-                            leave="ease-in duration-200"
-                            leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                            leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                        >
-                            <DialogPanel className="relative transform overflow-hidden rounded-2xl bg-gray-900 border border-gray-800 text-left shadow-2xl transition-all w-full max-w-6xl max-h-[90vh] flex flex-col">
-                                <div className="p-6 border-b border-gray-800 flex items-center justify-between shrink-0">
-                                    <DialogTitle as="h3" className="text-xl font-semibold leading-6 text-white flex items-center gap-2">
-                                        <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                        </svg>
-                                        제품 다중 비교
-                                    </DialogTitle>
-                                    <button
-                                        type="button"
-                                        className="rounded-lg p-2 text-gray-400 hover:text-white hover:bg-gray-800 focus:outline-none transition-colors"
-                                        onClick={onClose}
-                                    >
-                                        <span className="sr-only">닫기</span>
-                                        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
+        <div className="fixed inset-0 overflow-y-auto p-4 sm:p-6">
+          <div className="flex min-h-full items-end justify-center sm:items-center">
+            <TransitionChild
+              as={Fragment}
+              enter="ease-out duration-200"
+              enterFrom="translate-y-3 opacity-0 sm:translate-y-0 sm:scale-95"
+              enterTo="translate-y-0 opacity-100 sm:scale-100"
+              leave="ease-in duration-150"
+              leaveFrom="translate-y-0 opacity-100 sm:scale-100"
+              leaveTo="translate-y-3 opacity-0 sm:translate-y-0 sm:scale-95"
+            >
+              <DialogPanel className="flex max-h-[86vh] w-full max-w-6xl flex-col overflow-hidden rounded-[30px] border border-white/10 bg-[rgba(9,17,29,0.95)] shadow-[0_32px_90px_rgba(4,10,20,0.45)] backdrop-blur-xl">
+                <div className="flex items-start justify-between border-b border-white/8 px-5 py-4 sm:px-6">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Compare View</p>
+                    <DialogTitle as="h2" className="mt-2 text-2xl font-semibold text-white">
+                      선택한 결과 비교
+                    </DialogTitle>
+                  </div>
 
-                                <div className="p-6 overflow-x-auto overflow-y-auto flex-1 custom-scrollbar">
-                                    <div className="flex gap-6 min-w-max pb-4">
-                                        {comparedItems.map((item) => (
-                                            <div key={item.id} className="w-[340px] flex-shrink-0 flex flex-col gap-4 bg-gray-800/30 p-5 rounded-xl border border-gray-700/50 relative overflow-hidden">
-                                                <div
-                                                    className="absolute top-0 left-0 w-full h-1"
-                                                    style={{ backgroundColor: PLATFORM_COLORS[item.platform] || "#888" }}
-                                                />
-                                                {/* 헤더 */}
-                                                <div>
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <span
-                                                            className="px-2 py-0.5 rounded text-[10px] font-medium border"
-                                                            style={{
-                                                                color: PLATFORM_COLORS[item.platform] || "#888",
-                                                                borderColor: `${PLATFORM_COLORS[item.platform] || "#888"}40`,
-                                                                backgroundColor: `${PLATFORM_COLORS[item.platform] || "#888"}15`,
-                                                            }}
-                                                        >
-                                                            {PLATFORM_LABELS[item.platform] || item.platform}
-                                                        </span>
-                                                        {item.tier && (
-                                                            <span className={`px-2 py-0.5 rounded text-xs font-bold ${item.tier === "S" || item.tier === "A"
-                                                                    ? "text-emerald-400 bg-emerald-400/10"
-                                                                    : item.tier === "F" ? "text-red-400 bg-red-400/10" : "text-yellow-400 bg-yellow-400/10"
-                                                                }`}>
-                                                                Tier {item.tier} ({item.tss}점)
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <h4 className="text-white font-medium text-base leading-snug line-clamp-2" title={item.title}>
-                                                        {item.title}
-                                                    </h4>
-                                                </div>
-
-                                                <hr className="border-gray-700/50" />
-
-                                                {/* 점수 요약 */}
-                                                <div className="space-y-2">
-                                                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">세부 평가</h5>
-                                                    <div className="grid gap-2 text-sm">
-                                                        <div className="flex justify-between">
-                                                            <span className="text-gray-400">콘텐츠 신뢰(CRS)</span>
-                                                            <span className="text-gray-200 font-medium">{item.crs ?? "-"}</span>
-                                                        </div>
-                                                        <div className="flex justify-between">
-                                                            <span className="text-gray-400">경험 품질(EQS)</span>
-                                                            <span className="text-gray-200 font-medium">{item.eqs ?? "-"}</span>
-                                                        </div>
-                                                        <div className="flex justify-between">
-                                                            <span className="text-gray-400">결과물 보강(SCS)</span>
-                                                            <span className="text-gray-200 font-medium">{item.scs ?? "-"}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <hr className="border-gray-700/50" />
-
-                                                {/* 장단점/설명 요약 */}
-                                                <div className="flex-1 space-y-2">
-                                                    <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">주요 평가 근거</h5>
-                                                    <div className="flex flex-col gap-2 relative">
-                                                        {item.explanations?.map((exp, idx) => (
-                                                            <div key={idx} className="flex items-start gap-1.5 text-xs text-gray-300 bg-gray-900/50 rounded p-2">
-                                                                <span className={exp.includes('+') ? "text-emerald-400 mt-0.5" : exp.includes('-') ? "text-red-400 mt-0.5" : "text-gray-500 mt-0.5"}>
-                                                                    {exp.includes('+') ? '✓' : exp.includes('-') ? '⚠' : 'ℹ'}
-                                                                </span>
-                                                                <span className="leading-relaxed">{exp}</span>
-                                                            </div>
-                                                        ))}
-                                                        {(!item.explanations || item.explanations.length === 0) && (
-                                                            <p className="text-gray-500 text-xs italic">평가 근거가 없습니다.</p>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* 하단 버튼 */}
-                                                <div className="mt-4 pt-4 border-t border-gray-700/50">
-                                                    <a
-                                                        href={item.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="block w-full text-center py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors"
-                                                    >
-                                                        원문 보러가기
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </DialogPanel>
-                        </TransitionChild>
-                    </div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+                    aria-label="비교 보기 닫기"
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-            </Dialog>
-        </Transition>
-    );
+
+                <div className="flex-1 overflow-auto px-5 py-5 sm:px-6">
+                  <div className="flex min-w-max gap-4 pb-2">
+                    {comparedItems.map((item) => (
+                      <article
+                        key={item.id}
+                        className="relative flex w-[min(84vw,340px)] flex-shrink-0 flex-col rounded-[26px] border border-white/10 bg-white/5 p-5"
+                      >
+                        <div
+                          className="absolute inset-x-0 top-0 h-1.5 rounded-t-[26px]"
+                          style={{ backgroundColor: PLATFORM_COLORS[item.platform] || "#94a3b8" }}
+                          aria-hidden="true"
+                        />
+
+                        <div className="mt-2 flex items-start justify-between gap-2">
+                          <span
+                            className="rounded-full border px-3 py-1 text-xs font-medium"
+                            style={{
+                              color: PLATFORM_COLORS[item.platform] || "#94a3b8",
+                              borderColor: `${PLATFORM_COLORS[item.platform] || "#94a3b8"}33`,
+                              backgroundColor: `${PLATFORM_COLORS[item.platform] || "#94a3b8"}14`,
+                            }}
+                          >
+                            {PLATFORM_LABELS[item.platform] || item.platform}
+                          </span>
+                          {item.tier && (
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-200">
+                              Tier {item.tier}
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="mt-4 text-lg font-semibold leading-7 text-white">{item.title}</h3>
+                        {item.author_name && <p className="mt-2 text-sm text-slate-400">{item.author_name}</p>}
+
+                        <div className="mt-5 rounded-[22px] border border-white/8 bg-slate-950/40 p-4">
+                          <h4 className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">핵심 수치</h4>
+                          <dl className="mt-3 space-y-2 text-sm">
+                            <div className="flex items-center justify-between gap-3">
+                              <dt className="text-slate-300">총점 (TSS)</dt>
+                              <dd className="font-medium text-white">{item.tss ?? "-"}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <dt className="text-slate-300">광고성 차감 (CRS)</dt>
+                              <dd className="font-medium text-white">{item.crs ?? "-"}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                              <dt className="text-slate-300">실사용 가점 (EQS)</dt>
+                              <dd className="font-medium text-white">{item.eqs ?? "-"}</dd>
+                            </div>
+                          </dl>
+                        </div>
+
+                        <div className="mt-5 flex-1">
+                          <h4 className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">주요 근거</h4>
+                          <div className="mt-3 space-y-2">
+                            {item.explanations && item.explanations.length > 0 ? (
+                              item.explanations.slice(0, 4).map((explanation) => (
+                                <p key={explanation} className="rounded-2xl border border-white/8 bg-white/5 px-3 py-2 text-sm leading-6 text-slate-200">
+                                  {explanation}
+                                </p>
+                              ))
+                            ) : (
+                              <p className="text-sm text-slate-400">표시할 근거가 없습니다.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-5 inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                        >
+                          원문 보기
+                        </a>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
+        </div>
+      </Dialog>
+    </Transition>
+  );
 }

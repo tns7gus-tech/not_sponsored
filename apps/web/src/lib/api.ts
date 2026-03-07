@@ -158,6 +158,7 @@ export const PLATFORM_LABELS: Record<string, string> = {
   naver_shopping: "네이버 쇼핑",
   youtube: "YouTube",
   web: "웹",
+  web_analysis: "웹 페이지",
 };
 
 /** 플랫폼 컬러 매핑 */
@@ -168,6 +169,7 @@ export const PLATFORM_COLORS: Record<string, string> = {
   naver_shopping: "#03C75A",
   youtube: "#FF0000",
   web: "#4285F4",
+  web_analysis: "#38BDF8",
 };
 
 /** 트렌딩 검색어 가져오기 */

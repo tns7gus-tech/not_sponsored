@@ -1,147 +1,160 @@
 "use client";
 
 import { useState } from "react";
-import { PLATFORM_LABELS, PLATFORM_COLORS, submitFeedback, type SourceResult } from "@/lib/api";
-import ResultDetailModal from "./ResultDetailModal";
+
+import { PLATFORM_COLORS, PLATFORM_LABELS, submitFeedback, type SourceResult } from "@/lib/api";
 import ResultCardActions from "./ResultCardActions";
+import ResultDetailModal from "./ResultDetailModal";
 
 interface Props {
-    result: SourceResult;
-    isComparing?: boolean;
-    onCompareToggle?: () => void;
-    disabledCompare?: boolean;
+  result: SourceResult;
+  isComparing?: boolean;
+  onCompareToggle?: () => void;
+  disabledCompare?: boolean;
 }
 
 export default function ResultCard({ result, isComparing, onCompareToggle, disabledCompare }: Props) {
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [feedbackState, setFeedbackState] = useState<"helpful" | "ad_suspected" | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [feedbackState, setFeedbackState] = useState<"helpful" | "ad_suspected" | null>(null);
 
-    const platformLabel = PLATFORM_LABELS[result.platform] || result.platform;
-    const platformColor = PLATFORM_COLORS[result.platform] || "#888";
-    const isVideo = result.media_types?.includes("video");
+  const platformLabel = PLATFORM_LABELS[result.platform] || result.platform;
+  const platformColor = PLATFORM_COLORS[result.platform] || "#94a3b8";
+  const isVideo = result.media_types?.includes("video");
+  const formattedPublishedAt = formatPublishedAt(result.published_at);
 
-    const getTierColor = (tier: string | undefined) => {
-        switch (tier) {
-            case "S": return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20";
-            case "A": return "text-blue-400 bg-blue-400/10 border-blue-400/20";
-            case "B": return "text-yellow-400 bg-yellow-400/10 border-yellow-400/20";
-            case "F": return "text-red-400 bg-red-400/10 border-red-400/20";
-            default: return "text-orange-400 bg-orange-400/10 border-orange-400/20"; // C or null
-        }
-    };
+  const getTierColor = (tier: string | undefined) => {
+    switch (tier) {
+      case "S":
+        return "border-emerald-300/25 bg-emerald-300/10 text-emerald-100";
+      case "A":
+        return "border-sky-300/25 bg-sky-300/10 text-sky-100";
+      case "B":
+        return "border-amber-300/25 bg-amber-300/10 text-amber-100";
+      case "F":
+        return "border-rose-300/25 bg-rose-300/10 text-rose-100";
+      default:
+        return "border-orange-300/20 bg-orange-300/10 text-orange-100";
+    }
+  };
 
-    const handleFeedback = async (e: React.MouseEvent, type: "helpful" | "ad_suspected") => {
-        e.stopPropagation(); // 모달이 뜨는 것을 방지
-        if (feedbackState) return; // 이미 피드백을 남긴 경우 무시
+  const handleFeedback = async (event: React.MouseEvent, type: "helpful" | "ad_suspected") => {
+    event.stopPropagation();
+    if (feedbackState) {
+      return;
+    }
 
-        try {
-            await submitFeedback(type, result.id, result.url);
-            setFeedbackState(type);
-        } catch (error) {
-            console.error("피드백 제출 실패:", error);
-            alert("피드백 등록에 실패했습니다.");
-        }
-    };
+    try {
+      await submitFeedback(type, result.id, result.url);
+      setFeedbackState(type);
+    } catch (error) {
+      console.error("Failed to submit feedback:", error);
+    }
+  };
 
-    return (
-        <>
-            <article
-                className="group relative bg-gray-900/60 backdrop-blur-sm rounded-xl border border-gray-800/50 hover:border-gray-600/50 transition-all duration-300 overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                onClick={() => setIsModalOpen(true)}
-                role="button"
-                tabIndex={0}
-                aria-label={`${result.title} 상세 보기`}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        setIsModalOpen(true);
-                    }
+  return (
+    <>
+      <article className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[rgba(9,17,29,0.76)] p-5 shadow-[0_16px_48px_rgba(4,10,20,0.22)] backdrop-blur-xl transition hover:border-white/20 sm:p-6">
+        <div
+          className="absolute inset-y-0 left-0 w-1 rounded-l-[26px]"
+          style={{ backgroundColor: platformColor }}
+          aria-hidden="true"
+        />
+
+        <div className="pl-2 sm:pl-3">
+          <div className="mb-4 flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium"
+                style={{
+                  color: platformColor,
+                  borderColor: `${platformColor}33`,
+                  backgroundColor: `${platformColor}14`,
                 }}
-            >
-                {/* 좌측 플랫폼 컬러 바 */}
-                <div
-                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
-                    style={{ backgroundColor: platformColor }}
-                />
+              >
+                {isVideo ? "영상" : "문서"}
+                <span className="text-slate-100/70">/</span>
+                {platformLabel}
+              </span>
+              {formattedPublishedAt && <span className="text-xs text-slate-400">{formattedPublishedAt}</span>}
+            </div>
 
-                <div className="p-5 pl-6">
-                    {/* 상단: 플랫폼 배지 + 날짜 + Trust Tier */}
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                            <span
-                                className="px-2.5 py-0.5 rounded-md text-xs font-medium border"
-                                style={{
-                                    color: platformColor,
-                                    borderColor: `${platformColor}33`,
-                                    backgroundColor: `${platformColor}11`,
-                                }}
-                            >
-                                {isVideo && "🎬 "}
-                                {platformLabel}
-                            </span>
-                            {result.published_at && (
-                                <span className="text-gray-500 text-xs">{result.published_at}</span>
-                            )}
-                        </div>
-                        {/* Trust Tier Badge */}
-                        {result.tier && (
-                            <div className={`px-2 py-0.5 rounded text-xs font-bold border ${getTierColor(result.tier)} flex items-center gap-1`} title={`총 신뢰도 점수: ${result.tss}점`}>
-                                <span>Tier {result.tier}</span>
-                                <span className="opacity-70 font-normal">({result.tss})</span>
-                            </div>
-                        )}
-                    </div>
+            <div className="flex items-center gap-2 self-start">
+              {result.tier && (
+                <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${getTierColor(result.tier)}`}>
+                  Tier {result.tier} / TSS {result.tss ?? 0}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(true)}
+                aria-haspopup="dialog"
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200 transition hover:border-cyan-300/30 hover:bg-cyan-300/10 hover:text-white"
+              >
+                자세히 보기
+              </button>
+            </div>
+          </div>
 
-                    {/* 제목 */}
-                    <h3 className="text-white font-medium text-base leading-relaxed mb-2 group-hover:text-emerald-300 transition-colors">
-                        {result.title}
-                    </h3>
+          <h3 className="text-lg font-semibold leading-7 text-white sm:text-xl">{result.title}</h3>
 
-                    {/* 작성자 */}
-                    {result.author_name && (
-                        <p className="text-gray-500 text-xs mb-2">
-                            <span className="text-gray-600">by</span> {result.author_name}
-                        </p>
-                    )}
+          {result.author_name && <p className="mt-2 text-sm text-slate-400">{result.author_name}</p>}
 
-                    {/* 스니펫 */}
-                    {result.snippet && (
-                        <p className="text-gray-300 text-sm leading-relaxed line-clamp-3 mb-3">
-                            {result.snippet}
-                        </p>
-                    )}
+          {result.snippet && <p className="mt-4 line-clamp-3 text-sm leading-7 text-slate-200">{result.snippet}</p>}
 
-                    {/* 분석 근거 (Explanations) */}
-                    {result.explanations && result.explanations.length > 0 && (
-                        <div className="mb-4 flex flex-col gap-1.5 mt-2">
-                            {result.explanations.map((exp, idx) => (
-                                <div key={idx} className="flex items-start gap-1.5 text-xs text-gray-400 bg-gray-800/40 rounded p-1.5 border border-gray-700/50">
-                                    <span className={exp.includes('+') ? "text-emerald-400" : exp.includes('-') ? "text-red-400" : "text-gray-500"}>
-                                        {exp.includes('+') ? '✓' : exp.includes('-') ? '⚠' : 'ℹ'}
-                                    </span>
-                                    <span>{exp}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+          {result.explanations && result.explanations.length > 0 && (
+            <ul className="mt-5 grid gap-2">
+              {result.explanations.slice(0, 3).map((explanation) => {
+                const tone = explanation.includes("+")
+                  ? "border-emerald-300/10 bg-emerald-300/6 text-emerald-50"
+                  : explanation.includes("-")
+                    ? "border-rose-300/10 bg-rose-300/6 text-rose-50"
+                    : "border-white/8 bg-white/5 text-slate-200";
+                const marker = explanation.includes("+") ? "+" : explanation.includes("-") ? "-" : "i";
 
-                    {/* 하단: 피드백, 비교, 원문 보기 버튼 */}
-                    <ResultCardActions
-                        result={result}
-                        feedbackState={feedbackState}
-                        handleFeedback={handleFeedback}
-                        isComparing={isComparing}
-                        onCompareToggle={onCompareToggle}
-                        disabledCompare={disabledCompare}
-                    />
-                </div>
-            </article>
+                return (
+                  <li
+                    key={explanation}
+                    className={`flex items-start gap-2 rounded-2xl border px-3 py-2 text-sm leading-6 ${tone}`}
+                  >
+                    <span className="mt-0.5 text-sm" aria-hidden="true">
+                      {marker}
+                    </span>
+                    <span>{explanation}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
-            <ResultDetailModal
-                result={result}
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-            />
-        </>
-    );
+          <ResultCardActions
+            result={result}
+            feedbackState={feedbackState}
+            handleFeedback={handleFeedback}
+            isComparing={isComparing}
+            onCompareToggle={onCompareToggle}
+            disabledCompare={disabledCompare}
+          />
+        </div>
+      </article>
+
+      <ResultDetailModal result={result} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </>
+  );
+}
+
+function formatPublishedAt(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(date);
 }

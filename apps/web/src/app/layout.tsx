@@ -1,34 +1,41 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Not Sponsored - 신뢰도 기반 구매 리서치 에이전트",
-  description: "광고/협찬 가능성이 낮고 근거가 투명한 후기를 우선 탐색하는 AI 리서치 에이전트",
+  title: "Not Sponsored | 신뢰 기반 구매 리서치",
+  description: "광고 가능성과 실제 사용 근거를 분리해 보여주는 구매 리서치 에이전트",
+  applicationName: "Not Sponsored",
+  keywords: [
+    "구매 리서치",
+    "광고 판별",
+    "리뷰 신뢰도",
+    "NAVER 검색",
+    "YouTube 리뷰 분석",
+  ],
+};
+
+export const viewport: Viewport = {
+  themeColor: "#06111c",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className="dark">
-      <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="bg-gray-950 text-white antialiased min-h-screen" style={{ fontFamily: "'Inter', sans-serif" }}>
-        {/* Skip to Main Content (웹 접근성) */}
-        <a
-          href="#main-content"
-          className="absolute top-0 left-0 -translate-y-full focus:translate-y-0 bg-emerald-500 text-white px-4 py-2 z-50 transition-transform"
-        >
+      <body className="min-h-screen overflow-x-hidden antialiased">
+        <a href="#main-content" className="skip-link">
           본문으로 건너뛰기
         </a>
 
-        {/* 배경 그라디언트 */}
-        <div className="fixed inset-0 -z-10" aria-hidden="true">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+        <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_36%),radial-gradient(circle_at_82%_18%,rgba(244,114,182,0.12),transparent_24%),linear-gradient(180deg,#07111d_0%,#020817_55%,#010409_100%)]" />
+          <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:72px_72px]" />
+          <div className="absolute left-[10%] top-24 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
+          <div className="absolute right-[12%] top-32 h-56 w-56 rounded-full bg-fuchsia-400/10 blur-3xl" />
+          <div className="absolute bottom-[-4rem] left-1/3 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
         </div>
+
         {children}
       </body>
     </html>

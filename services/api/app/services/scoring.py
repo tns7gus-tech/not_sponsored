@@ -1,62 +1,52 @@
 """
-스코어링 엔진 (Scoring Engine)
-- 추출된 신호(ExtractedSignals)를 기반으로 결과 아이템의 신뢰도 점수를 산출합니다.
-
-점수 체계 (100점 만점 기준):
-1. CRS (Content Reliability Score) - 광고/협찬 배제 점수 (기본 100점, 광고 신호 발견 차감)
-2. EQS (Experience Quality Score) - 실사용 경험 품질 점수 (기본 0점, 실사용 신호 발견 시 가점)
-3. TSS (Total Trust Score) - 최종 신뢰도 점수 (Weighted Sum)
+스코어링 엔진 (Scoring Engine).
 """
+
 import logging
-from typing import List, Dict, Any
-from app.models.search import ExtractedSignal
+from typing import Any, Dict, Iterable
+
 from app.services.signal_extractor import GROUP_AD, GROUP_REAL_USAGE
 
 logger = logging.getLogger(__name__)
 
 
-def calculate_scores(signals: List[ExtractedSignal]) -> Dict[str, Any]:
-    """
-    ExtractedSignal 리스트를 입력받아 CRS, EQS, TSS를 계산하고 근거(explanation)를 반환
+def _get_signal_value(signal: Any, key: str, default: Any = None) -> Any:
+    if isinstance(signal, dict):
+        return signal.get(key, default)
+    return getattr(signal, key, default)
 
-    Returns:
-        {
-            "crs": int,
-            "eqs": int,
-            "tss": int,
-            "tier": str,  # S, A, B, C, F
-            "explanation": List[str]
-        }
+
+def calculate_scores(signals: Iterable[Any]) -> Dict[str, Any]:
+    """
+    추출된 신호를 기반으로 CRS, EQS, TSS를 계산한다.
+
+    dict 형태의 신호와 ORM 객체 모두 처리한다.
     """
     crs = 100
     eqs = 0
-    explanations = []
+    explanations: list[str] = []
 
-    # 신호별 가중치 적용
-    for sig in signals:
-        if sig.signal_group == GROUP_AD:
-            # 광고 신호 발견 시 점수 대폭 삭감
-            penalty = int(40 * sig.confidence)
+    for signal in signals:
+        signal_group = _get_signal_value(signal, "signal_group")
+        confidence = float(_get_signal_value(signal, "confidence", 0) or 0)
+        matched_text = _get_signal_value(signal, "matched_text", "")
+
+        if signal_group == GROUP_AD:
+            penalty = int(40 * confidence)
             crs -= penalty
-            explanations.append(f"광고/협찬 의심 표현 발견: '{sig.matched_text}' (-{penalty}점)")
-        
-        elif sig.signal_group == GROUP_REAL_USAGE:
-            # 실사용 신호 발견 시 가점 부여
-            bonus = int(25 * sig.confidence)
+            explanations.append(f"광고/협찬 의심 표현 발견: '{matched_text}' (-{penalty}점)")
+        elif signal_group == GROUP_REAL_USAGE:
+            bonus = int(25 * confidence)
             eqs += bonus
-            explanations.append(f"실사용 경험(단점/기간 등) 묘사 발견: '{sig.matched_text}' (+{bonus}점)")
+            explanations.append(f"실사용 경험(단점/기간 등) 묘사 발견: '{matched_text}' (+{bonus}점)")
 
-    # 범위 보정
     crs = max(0, min(100, crs))
-    eqs = max(0, min(100, EQS_CAP_CALCULATOR(eqs)))  # 100점 캡
-
-    # 가중치 합산 (CRS 60% + EQS 40%) - 실험적 수치
+    eqs = max(0, min(100, eqs))
     tss = int((crs * 0.6) + (eqs * 0.4))
 
-    # 등급(Tier) 판정
     tier = "C"
     if crs < 50:
-        tier = "F"  # 광고성 농후
+        tier = "F"
     elif tss >= 80:
         tier = "S"
     elif tss >= 60:
@@ -74,6 +64,3 @@ def calculate_scores(signals: List[ExtractedSignal]) -> Dict[str, Any]:
         "tier": tier,
         "explanation": explanations,
     }
-
-def EQS_CAP_CALCULATOR(eqs: int) -> int:
-    return eqs if eqs <= 100 else 100

@@ -6,6 +6,7 @@ aiosqlite
 alembic
 redis
 httpx
+beautifulsoup4
 pydantic
 pydantic-settings
 python-dotenv

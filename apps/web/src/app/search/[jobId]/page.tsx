@@ -1,227 +1,261 @@
 "use client";
 
-import { useEffect, useState, useCallback, use } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSearchResults, type SearchJobDetail } from "@/lib/api";
-import SearchProgress from "@/components/SearchProgress";
+
 import ResultList from "@/components/ResultList";
+import SearchProgress from "@/components/SearchProgress";
+import { getSearchResults, type SearchJobDetail } from "@/lib/api";
 
-/** 검색 결과 페이지 - 폴링으로 실시간 상태 업데이트 */
+const TIER_LABELS: Record<string, string> = {
+  S: "매우 높음",
+  A: "높음",
+  B: "보통",
+  C: "낮음",
+  F: "주의",
+};
+
+const TIER_COLORS: Record<string, string> = {
+  S: "bg-emerald-400",
+  A: "bg-sky-400",
+  B: "bg-amber-400",
+  C: "bg-orange-400",
+  F: "bg-rose-400",
+};
+
 export default function SearchResultsPage({
-    params,
+  params,
 }: {
-    params: Promise<{ jobId: string }>;
+  params: Promise<{ jobId: string }>;
 }) {
-    const { jobId } = use(params);
-    const router = useRouter();
-    const [data, setData] = useState<SearchJobDetail | null>(null);
-    const [error, setError] = useState<string | null>(null);
+  const { jobId } = use(params);
+  const router = useRouter();
+  const [data, setData] = useState<SearchJobDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-    const fetchResults = useCallback(async () => {
-        try {
-            const result = await getSearchResults(jobId);
-            setData(result);
-            return result.status;
-        } catch {
-            setError("결과를 불러오는 데 실패했습니다.");
-            return "failed";
-        }
-    }, [jobId]);
+  const fetchResults = useCallback(async () => {
+    try {
+      const result = await getSearchResults(jobId);
+      setData(result);
+      return result.status;
+    } catch {
+      setError("결과를 불러오는 데 실패했습니다.");
+      return "failed";
+    }
+  }, [jobId]);
 
-    // 폴링 - 1.5초마다 상태 확인
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
 
-        const poll = async () => {
-            const status = await fetchResults();
-            if (status === "queued" || status === "running") {
-                timer = setTimeout(poll, 1500);
-            }
-        };
+    const poll = async () => {
+      const status = await fetchResults();
+      if (status === "queued" || status === "running") {
+        timer = setTimeout(poll, 1500);
+      }
+    };
 
-        poll();
-        return () => clearTimeout(timer);
-    }, [fetchResults]);
+    poll();
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [fetchResults]);
 
-    const isSearching = data?.status === "queued" || data?.status === "running";
-    const isDone = data?.status === "completed";
-    const isFailed = data?.status === "failed";
+  const isSearching = data?.status === "queued" || data?.status === "running";
+  const isDone = data?.status === "completed";
+  const isFailed = data?.status === "failed";
 
-    return (
-        <main className="min-h-screen px-4 py-8">
-            {/* 헤더 */}
-            <header className="max-w-3xl mx-auto flex items-center gap-3 mb-8">
-                <button
-                    onClick={() => router.push("/")}
-                    className="p-2 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-                <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <span className="text-sm font-semibold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                        Not Sponsored
+  return (
+    <main id="main-content" className="min-h-screen px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto w-full max-w-6xl">
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => router.push("/")}
+              aria-label="홈으로 돌아가기"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Search Session</p>
+              <h1 className="mt-1 text-2xl font-semibold text-white">리서치 결과</h1>
+            </div>
+          </div>
+
+          {data?.query && (
+            <div className="inline-flex items-center gap-2 self-start rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100">
+              <span className="text-cyan-300/80">질의</span>
+              <span className="font-medium text-white">{data.query}</span>
+            </div>
+          )}
+        </header>
+
+        {(error || isFailed) && (
+          <section className="mx-auto mt-12 max-w-2xl">
+            <div className="rounded-[28px] border border-red-500/20 bg-red-500/10 p-6 text-center">
+              <p className="text-sm text-red-100">{error || data?.error_message || "검색 중 오류가 발생했습니다."}</p>
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
+              >
+                다시 검색하기
+              </button>
+            </div>
+          </section>
+        )}
+
+        {isSearching && data && (
+          <SearchProgress
+            query={data.query}
+            expandedQueries={data.expanded_queries || undefined}
+            progress={data.progress || undefined}
+          />
+        )}
+
+        {isDone && data && (
+          <>
+            <section
+              aria-labelledby="search-summary-title"
+              className="mb-8 rounded-[30px] border border-white/10 bg-[rgba(9,17,29,0.78)] p-6 shadow-[0_24px_72px_rgba(4,10,20,0.28)] backdrop-blur-xl sm:p-7"
+            >
+              <div className="flex flex-col gap-3 border-b border-white/8 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Session Summary</p>
+                  <h2 id="search-summary-title" className="mt-2 text-2xl font-semibold text-white">
+                    {data.query} 리서치 요약
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    광고 가능성 신호와 실사용 표현을 함께 읽어 상대적으로 참고할 만한 결과를 먼저 배치했습니다.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {data.summary?.overall_status === "HIGH_TRUST" && (
+                    <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-sm text-emerald-100">
+                      신뢰 근거가 비교적 잘 모였습니다
                     </span>
+                  )}
+                  {data.summary?.overall_status === "AD_DENSE" && (
+                    <span className="rounded-full border border-rose-300/20 bg-rose-300/10 px-3 py-1 text-sm text-rose-100">
+                      광고성 패턴 비중이 높습니다
+                    </span>
+                  )}
+                  {data.summary?.overall_status === "CAUTION" && (
+                    <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-sm text-amber-100">
+                      원문 교차 확인이 필요합니다
+                    </span>
+                  )}
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-200">
+                    총 {data.summary?.total_results || 0}건
+                  </span>
                 </div>
-                {data?.query && (
-                    <div className="ml-4 px-3 py-1 bg-gray-800/60 rounded-lg text-gray-300 text-sm border border-gray-700/30">
-                        {data.query}
-                    </div>
-                )}
-            </header>
+              </div>
 
-            {/* 에러 상태 */}
-            {(error || isFailed) && (
-                <div className="max-w-2xl mx-auto mt-12 text-center">
-                    <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
-                        <p className="text-red-400 text-sm mb-2">
-                            {error || data?.error_message || "검색 중 오류가 발생했습니다"}
-                        </p>
-                        <button
-                            onClick={() => router.push("/")}
-                            className="mt-3 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition"
-                        >
-                            다시 검색하기
-                        </button>
-                    </div>
+              <div className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_0.95fr]">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <section className="rounded-[24px] border border-emerald-400/10 bg-emerald-400/5 p-5">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-emerald-100">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      주요 장점 / 실사용 포인트
+                    </h3>
+                    <ul className="mt-3 space-y-2">
+                      {data.summary?.pros && data.summary.pros.length > 0 ? (
+                        data.summary.pros.map((item) => (
+                          <li key={item} className="flex items-start gap-2 text-sm leading-6 text-slate-200">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-300" aria-hidden="true" />
+                            <span>{item}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="text-sm text-slate-400">뾰족한 실사용 장점 신호는 아직 많지 않습니다.</li>
+                      )}
+                    </ul>
+                  </section>
+
+                  <section className="rounded-[24px] border border-rose-400/10 bg-rose-400/5 p-5">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-rose-100">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                      주요 단점 / 주의 포인트
+                    </h3>
+                    <ul className="mt-3 space-y-2">
+                      {data.summary?.cons && data.summary.cons.length > 0 ? (
+                        data.summary.cons.map((item) => (
+                          <li key={item} className="flex items-start gap-2 text-sm leading-6 text-slate-200">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-rose-300" aria-hidden="true" />
+                            <span>{item}</span>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="text-sm text-slate-400">반복적으로 포착된 단점 신호는 많지 않습니다.</li>
+                      )}
+                    </ul>
+                  </section>
                 </div>
-            )}
 
-            {/* 검색 진행 중 */}
-            {isSearching && data && (
-                <SearchProgress
-                    query={data.query}
-                    expandedQueries={data.expanded_queries || undefined}
-                    progress={data.progress || undefined}
-                />
-            )}
+                <section className="rounded-[24px] border border-white/10 bg-slate-950/30 p-5">
+                  <h3 className="text-sm font-semibold text-white">신뢰 등급 분포</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                    등급은 광고성 차감과 실사용 가점을 조합한 내부 산식 기준입니다. 원문 확인 전 최종 판단으로 사용하면 안 됩니다.
+                  </p>
+                  <div className="mt-5 space-y-3.5">
+                    {(["S", "A", "B", "C", "F"] as const).map((tier) => {
+                      const count = data.summary?.tier_distribution?.[tier] || 0;
+                      const maxCount = Math.max(
+                        1,
+                        ...(Object.values(
+                          data.summary?.tier_distribution || { S: 0, A: 0, B: 0, C: 0, F: 0 },
+                        ) as number[]),
+                      );
+                      const percentage = (count / maxCount) * 100;
 
-            {/* 검색 완료 - 결과 리스트 */}
-            {isDone && data && (
-                <>
-                    {/* 요약 카드 */}
-                    <div className="max-w-3xl mx-auto mb-8 space-y-4">
-                        <div className="bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-gray-700/40 p-6">
-                            <div className="flex items-center justify-between mb-6 border-b border-gray-700/50 pb-4">
-                                <div className="flex items-center gap-3">
-                                    <h2 className="text-white text-lg font-semibold">
-                                        {data.query} 리서치 요약
-                                    </h2>
-                                    {data.summary?.overall_status === "HIGH_TRUST" && (
-                                        <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-md text-xs font-bold">
-                                            우수 (신뢰도 높음)
-                                        </span>
-                                    )}
-                                    {data.summary?.overall_status === "AD_DENSE" && (
-                                        <span className="px-2.5 py-1 bg-red-500/10 border border-red-500/30 text-red-400 rounded-md text-xs font-bold">
-                                            주의 (광고 많음)
-                                        </span>
-                                    )}
-                                    {data.summary?.overall_status === "CAUTION" && (
-                                        <span className="px-2.5 py-1 bg-orange-500/10 border border-orange-500/30 text-orange-400 rounded-md text-xs font-bold">
-                                            교차 검증 필요
-                                        </span>
-                                    )}
-                                </div>
-                                <p className="text-gray-400 text-sm">
-                                    총 <span className="text-white font-medium">{data.summary?.total_results || 0}</span>건 분석 완료
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {/* 장단점 요약 */}
-                                <div className="space-y-6">
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                            주요 장점 / 실사용 인증
-                                        </h3>
-                                        <ul className="space-y-2">
-                                            {data.summary?.pros && data.summary.pros.length > 0 ? (
-                                                data.summary.pros.map((pro, i) => (
-                                                    <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                                                        <span className="text-emerald-500 mt-0.5">•</span>
-                                                        <span className="leading-snug">{pro}</span>
-                                                    </li>
-                                                ))
-                                            ) : (
-                                                <li className="text-sm text-gray-500">추출된 실사용 장점 신호가 없습니다.</li>
-                                            )}
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-red-400 mb-3 flex items-center gap-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                                            주요 단점 / 아쉬운 점
-                                        </h3>
-                                        <ul className="space-y-2">
-                                            {data.summary?.cons && data.summary.cons.length > 0 ? (
-                                                data.summary.cons.map((con, i) => (
-                                                    <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
-                                                        <span className="text-red-500 mt-0.5">•</span>
-                                                        <span className="leading-snug">{con}</span>
-                                                    </li>
-                                                ))
-                                            ) : (
-                                                <li className="text-sm text-gray-500">추출된 단점 신호가 없습니다.</li>
-                                            )}
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                {/* 등급 분포 */}
-                                <div className="bg-gray-800/30 rounded-xl p-5 border border-gray-700/30">
-                                    <h3 className="text-sm font-semibold text-gray-300 mb-4">신뢰도 등급 분포</h3>
-                                    <div className="space-y-3.5">
-                                        {[
-                                            { tier: 'S', label: '매우 높음', color: 'bg-emerald-500' },
-                                            { tier: 'A', label: '높음', color: 'bg-blue-500' },
-                                            { tier: 'B', label: '보통', color: 'bg-yellow-500' },
-                                            { tier: 'C', label: '낮음', color: 'bg-orange-500' },
-                                            { tier: 'F', label: '광고 의심', color: 'bg-red-500' }
-                                        ].map(({ tier, label, color }) => {
-                                            const count = data.summary?.tier_distribution?.[tier] || 0;
-                                            const maxCount = Math.max(1, ...(Object.values(data.summary?.tier_distribution || { S: 0, A: 0, B: 0, C: 0, F: 0 }) as number[]));
-                                            const percentage = (count / maxCount) * 100;
-                                            return (
-                                                <div key={tier} className="flex items-center gap-3 text-sm">
-                                                    <div className="w-14 items-center flex gap-1">
-                                                        <span className="font-bold text-gray-400 w-3">{tier}</span>
-                                                    </div>
-                                                    <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
-                                                        <div className={`h-full ${color} rounded-full transition-all duration-1000`} style={{ width: `${percentage}%` }} />
-                                                    </div>
-                                                    <div className="w-8 text-right text-gray-300 font-medium">{count}</div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
+                      return (
+                        <div key={tier} className="grid grid-cols-[60px_88px_1fr_32px] items-center gap-3 text-sm">
+                          <span className="font-semibold text-slate-200">{tier}</span>
+                          <span className="text-xs text-slate-400">{TIER_LABELS[tier]}</span>
+                          <div className="h-2 rounded-full bg-white/8">
+                            <div
+                              className={`h-2 rounded-full ${TIER_COLORS[tier]} transition-all duration-700`}
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-right text-slate-200">{count}</span>
                         </div>
-                    </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              </div>
+            </section>
 
-                    {/* 결과 리스트 */}
-                    <ResultList
-                        results={data.results}
-                        platforms={data.summary?.platforms || []}
-                    />
-                </>
+            {data.results.length > 0 ? (
+              <ResultList results={data.results} platforms={data.summary?.platforms || []} />
+            ) : (
+              <section className="rounded-[28px] border border-white/10 bg-white/5 p-8 text-center text-slate-300">
+                수집된 결과가 아직 없습니다. API 키 설정 또는 커넥터 연결 상태를 확인해보세요.
+              </section>
             )}
 
-            {/* 하단 면책 */}
-            {isDone && (
-                <p className="text-center text-gray-600 text-[10px] mt-12 max-w-md mx-auto">
-                    이 결과는 AI 기반 자동 수집 및 추정 결과이며, 사실의 확정이 아닙니다.
-                    구매 결정 전 원문을 직접 확인하시기 바랍니다.
-                </p>
-            )}
-        </main>
-    );
+            <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-6 text-slate-400">
+              이 결과는 AI 기반 자동 수집 및 추정 결과이며 사실의 확정이 아닙니다. 구매 결정 전에는 원문과 판매 조건을 직접 확인하세요.
+            </p>
+          </>
+        )}
+      </div>
+    </main>
+  );
 }

@@ -1,33 +1,56 @@
-export default function AppFeatures() {
-    return (
-        <>
-            <section aria-labelledby="features-title" className="mt-16 max-w-2xl mx-auto">
-                <h2 id="features-title" className="sr-only">서비스 주요 기능</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-                    <div className="p-4 rounded-xl hover:bg-gray-800/30 transition-colors">
-                        <div className="text-3xl mb-3" aria-hidden="true">🔍</div>
-                        <h3 className="text-gray-300 font-medium mb-1">다중 소스 통합 검색</h3>
-                        <p className="text-gray-500 text-xs">제품명만 입력하면 블로그, 카페, 유튜브를 한 번에 검색</p>
-                    </div>
-                    <div className="p-4 rounded-xl hover:bg-gray-800/30 transition-colors">
-                        <div className="text-3xl mb-3" aria-hidden="true">🛡️</div>
-                        <h3 className="text-gray-300 font-medium mb-1">광고 패턴 감지</h3>
-                        <p className="text-gray-500 text-xs">광고/협찬 신호를 AI 모델이 자동으로 감지하여 표시</p>
-                    </div>
-                    <div className="p-4 rounded-xl hover:bg-gray-800/30 transition-colors">
-                        <div className="text-3xl mb-3" aria-hidden="true">📊</div>
-                        <h3 className="text-gray-300 font-medium mb-1">투명한 근거 제시</h3>
-                        <p className="text-gray-500 text-xs">어떤 문장 때문에 점수가 깎였는지, 객관적 분석 근거 제공</p>
-                    </div>
-                </div>
-            </section>
+const FEATURE_CARDS = [
+  {
+    title: "다중 소스 검색",
+    description: "제품명 하나로 네이버, 유튜브, 웹 페이지 단서를 묶어서 확인합니다.",
+    accent: "from-emerald-400/20 to-cyan-400/10",
+  },
+  {
+    title: "근거 기반 설명",
+    description: "점수만 주지 않고 어떤 표현이 신뢰도에 영향을 줬는지 함께 보여줍니다.",
+    accent: "from-cyan-400/20 to-sky-400/10",
+  },
+  {
+    title: "안전한 분석 경계",
+    description: "공개 URL만 허용하고, 내부망·비표준 포트·민감정보는 기본 차단합니다.",
+    accent: "from-sky-400/20 to-indigo-400/10",
+  },
+];
 
-            <footer className="mt-12 text-gray-600 text-[10px] max-w-md text-center px-4 pb-8">
-                <p>
-                    이 서비스는 AI 기반 자동 추정 결과를 제공하며, 사실의 확정이 아닙니다.
-                    구매 결정 전 원문을 직접 확인하시기 바랍니다.
-                </p>
-            </footer>
-        </>
-    );
+export default function AppFeatures() {
+  return (
+    <>
+      <section aria-labelledby="features-title" className="mx-auto mt-14 w-full max-w-6xl">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+              Product Principles
+            </p>
+            <h2 id="features-title" className="mt-2 text-2xl font-semibold text-white">
+              현재 구현이 지키는 핵심 방향
+            </h2>
+          </div>
+          <p className="max-w-xl text-sm leading-6 text-slate-300">
+            이 서비스는 후기의 진위를 단정하지 않습니다. 공개 근거를 정리하고, 사용자가 최종 판단할 수 있도록 맥락을 제공합니다.
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {FEATURE_CARDS.map((card) => (
+            <article
+              key={card.title}
+              className="rounded-[24px] border border-white/10 bg-[rgba(9,18,30,0.72)] p-5 shadow-[0_16px_48px_rgba(4,10,20,0.24)] backdrop-blur-xl"
+            >
+              <div className={`mb-4 h-10 rounded-2xl bg-gradient-to-r ${card.accent}`} aria-hidden="true" />
+              <h3 className="text-lg font-semibold text-white">{card.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{card.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <footer className="mx-auto mt-10 max-w-3xl px-4 pb-10 text-center text-xs leading-6 text-slate-400">
+        자동 추정 결과이므로 사실 확정이나 법적 판단으로 사용하면 안 됩니다. 구매 전에는 원문과 판매 조건을 직접 확인하세요.
+      </footer>
+    </>
+  );
 }

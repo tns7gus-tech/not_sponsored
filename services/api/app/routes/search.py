@@ -1,28 +1,32 @@
-from __future__ import annotations
 """
-검색 API 라우터
+검색 API 라우터.
 
-POST /api/search     - 검색 시작
-GET  /api/search/{job_id} - 검색 결과 조회
+POST /api/search
+GET  /api/search/{job_id}
 """
+
+from __future__ import annotations
+
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+
 from app.database import get_db
-from app.models.search import QueryJob, SourceResult, JobStatus
+from app.limiter import limiter
+from app.models.search import JobStatus, QueryJob, SourceResult
 from app.schemas.search import (
-    SearchRequest,
-    SearchJobResponse,
-    SearchJobDetailResponse,
-    SourceResultResponse,
-    SearchProgressResponse,
-    SearchSummaryResponse,
     EngagementData,
+    SearchJobDetailResponse,
+    SearchJobResponse,
+    SearchProgressResponse,
+    SearchRequest,
+    SearchSummaryResponse,
+    SourceResultResponse,
 )
 from app.services.search_orchestrator import run_search_pipeline
-from app.limiter import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -37,30 +41,21 @@ async def create_search(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    """검색 시작 - 검색 작업을 생성하고 비동기로 실행"""
-    logger.info(f"검색 요청: '{req.query}'")
+    """검색 작업을 생성하고 백그라운드 파이프라인을 시작한다."""
+    logger.info("검색 요청: '%s'", req.query)
 
-    # 검색 작업 생성
-    job = QueryJob(
-        raw_query=req.query,
-        status=JobStatus.QUEUED.value,
-    )
+    job = QueryJob(raw_query=req.query, status=JobStatus.QUEUED.value)
     db.add(job)
     await db.commit()
     await db.refresh(job)
 
-    # 백그라운드에서 검색 파이프라인 실행
     background_tasks.add_task(_run_pipeline_with_session, job.id, req.query)
-
     return SearchJobResponse(job_id=job.id, status=job.status)
 
 
 @router.get("/trending", response_model=list[str])
-async def get_trending_searches(
-    db: AsyncSession = Depends(get_db),
-):
-    """최근 가장 많이 검색된 인기 검색어 반환"""
-    # 1. 완료된 작업 중 가장 많이 검색된 raw_query 상위 6개 추출
+async def get_trending_searches(db: AsyncSession = Depends(get_db)):
+    """최근 자주 검색된 키워드를 반환한다."""
     query = (
         select(QueryJob.raw_query)
         .where(QueryJob.status == JobStatus.COMPLETED.value)
@@ -71,7 +66,6 @@ async def get_trending_searches(
     result = await db.execute(query)
     trending = result.scalars().all()
 
-    # 2. 결과가 부족할 경우를 대비한 기본 검색어 목록
     default_queries = [
         "아이폰17",
         "나이키 페가수스 42",
@@ -81,13 +75,12 @@ async def get_trending_searches(
         "건성 피부 선크림",
     ]
 
-    # 3. DB 결과와 기본 리스트 병합 (중복 제거하며 최대 6개 채우기)
     final_queries = list(trending)
-    for q in default_queries:
+    for item in default_queries:
         if len(final_queries) >= 6:
             break
-        if q not in final_queries:
-            final_queries.append(q)
+        if item not in final_queries:
+            final_queries.append(item)
 
     return final_queries
 
@@ -98,12 +91,11 @@ async def get_search_results(
     platform: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """검색 결과 조회 - 상태 및 결과 반환"""
+    """검색 결과와 진행 상태를 반환한다."""
     job = await db.get(QueryJob, job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="검색 작업을 찾을 수 없습니다")
+        raise HTTPException(status_code=404, detail="검색 작업을 찾을 수 없습니다.")
 
-    # 결과 조회
     query = select(SourceResult).where(SourceResult.query_job_id == job_id)
     if platform:
         query = query.where(SourceResult.platform == platform)
@@ -112,55 +104,55 @@ async def get_search_results(
     result = await db.execute(query)
     source_results = result.scalars().all()
 
-    # 응답 구성
     results_response = []
-    for sr in source_results:
+    for source_result in source_results:
         engagement = None
-        if sr.engagement_json:
+        if source_result.engagement_json:
             engagement = EngagementData(
-                likes=sr.engagement_json.get("likes"),
-                comments=sr.engagement_json.get("comments"),
-                views=sr.engagement_json.get("views"),
+                likes=source_result.engagement_json.get("likes"),
+                comments=source_result.engagement_json.get("comments"),
+                views=source_result.engagement_json.get("views"),
             )
 
         results_response.append(
             SourceResultResponse(
-                id=sr.id,
-                platform=sr.platform,
-                url=sr.url,
-                title=sr.title,
-                author_name=sr.author_name,
-                published_at=sr.published_at,
-                snippet=sr.snippet,
-                media_types=sr.media_types,
+                id=source_result.id,
+                platform=source_result.platform,
+                url=source_result.url,
+                title=source_result.title,
+                author_name=source_result.author_name,
+                published_at=source_result.published_at,
+                snippet=source_result.snippet,
+                media_types=source_result.media_types,
                 engagement=engagement,
-                crs=sr.crs,
-                eqs=sr.eqs,
-                tss=sr.tss,
-                tier=sr.tier,
-                explanations=sr.explanations_json if sr.explanations_json else [],
+                crs=source_result.crs,
+                eqs=source_result.eqs,
+                tss=source_result.tss,
+                tier=source_result.tier,
+                explanations=source_result.explanations_json or [],
             )
         )
 
-    # 확장된 질의 목록
     expanded_queries = None
     if job.expanded_queries_json:
         expanded_queries = job.expanded_queries_json.get("queries", [])
 
-    # 요약 정보
     summary = None
     if job.summary_json:
         summary = SearchSummaryResponse(
             total_results=job.summary_json.get("total_results", 0),
             platforms=job.summary_json.get("platforms", []),
+            tier_distribution=job.summary_json.get("tier_distribution", {}),
+            pros=job.summary_json.get("pros", []),
+            cons=job.summary_json.get("cons", []),
+            overall_status=job.summary_json.get("overall_status"),
         )
 
-    # 진행 상태
     progress = None
     if job.status == JobStatus.RUNNING.value:
         progress = SearchProgressResponse(
             connectors_total=5,
-            connectors_done=len(set(r.platform for r in source_results)),
+            connectors_done=len({item.platform for item in source_results}),
             results_collected=len(source_results),
         )
 
@@ -179,11 +171,11 @@ async def get_search_results(
 
 
 async def _run_pipeline_with_session(job_id: str, raw_query: str):
-    """백그라운드 태스크에서 별도 DB 세션으로 파이프라인 실행"""
+    """백그라운드 검색 파이프라인을 별도 세션에서 실행한다."""
     from app.database import async_session
 
     async with async_session() as db:
         try:
             await run_search_pipeline(job_id, raw_query, db)
-        except Exception as e:
-            logger.error(f"백그라운드 파이프라인 에러: {e}", exc_info=True)
+        except Exception as exc:
+            logger.error("백그라운드 검색 파이프라인 오류: %s", exc, exc_info=True)

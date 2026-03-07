@@ -1,211 +1,211 @@
 "use client";
 
-import { useEffect } from "react";
-import { type SourceResult, PLATFORM_LABELS, PLATFORM_COLORS } from "@/lib/api";
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
+import { Fragment } from "react";
+
+import { PLATFORM_COLORS, PLATFORM_LABELS, type SourceResult } from "@/lib/api";
 
 interface Props {
-    result: SourceResult;
-    isOpen: boolean;
-    onClose: () => void;
+  result: SourceResult;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
+const TIER_COPY: Record<string, string> = {
+  S: "근거가 풍부한 편",
+  A: "비교적 참고 가능",
+  B: "근거가 혼합됨",
+  C: "추가 확인 필요",
+  F: "광고성 또는 근거 부족 주의",
+};
+
 export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
-    // 키보드 이벤트(ESC)로 닫기
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        if (isOpen) {
-            window.addEventListener("keydown", handleKeyDown);
-            // 줌 방지 및 스크롤 고정
-            document.body.style.overflow = "hidden";
-        }
-        return () => {
-            window.removeEventListener("keydown", handleKeyDown);
-            document.body.style.overflow = "unset";
-        };
-    }, [isOpen, onClose]);
+  const platformLabel = PLATFORM_LABELS[result.platform] || result.platform;
+  const platformColor = PLATFORM_COLORS[result.platform] || "#94a3b8";
 
-    if (!isOpen) return null;
+  return (
+    <Transition show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-200"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-150"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md" />
+        </TransitionChild>
 
-    const platformLabel = PLATFORM_LABELS[result.platform] || result.platform;
-    const platformColor = PLATFORM_COLORS[result.platform] || "#888";
-
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6 sm:p-6">
-            {/* 백드롭 */}
-            <div
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
-                onClick={onClose}
-                aria-hidden="true"
-            />
-
-            {/* 빙글빙글 모달 컨테이너 */}
-            <div
-                className="relative w-full max-w-2xl bg-gray-900 border border-gray-700/60 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="modal-title"
+        <div className="fixed inset-0 overflow-y-auto p-4 sm:p-6">
+          <div className="flex min-h-full items-end justify-center sm:items-center">
+            <TransitionChild
+              as={Fragment}
+              enter="ease-out duration-200"
+              enterFrom="translate-y-3 opacity-0 sm:translate-y-0 sm:scale-95"
+              enterTo="translate-y-0 opacity-100 sm:scale-100"
+              leave="ease-in duration-150"
+              leaveFrom="translate-y-0 opacity-100 sm:scale-100"
+              leaveTo="translate-y-3 opacity-0 sm:translate-y-0 sm:scale-95"
             >
-                {/* 상단 헤더 + 플랫폼 컬러바 */}
+              <DialogPanel className="relative w-full max-w-3xl overflow-hidden rounded-[30px] border border-white/10 bg-[rgba(9,17,29,0.95)] shadow-[0_32px_90px_rgba(4,10,20,0.45)] backdrop-blur-xl">
                 <div
-                    className="absolute top-0 left-0 right-0 h-1"
-                    style={{ backgroundColor: platformColor }}
+                  className="absolute inset-x-0 top-0 h-1.5"
+                  style={{ backgroundColor: platformColor }}
+                  aria-hidden="true"
                 />
 
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-                    <div className="flex items-center gap-3">
-                        <span
-                            className="px-2.5 py-0.5 rounded-md text-xs font-medium border"
-                            style={{
-                                color: platformColor,
-                                borderColor: `${platformColor}33`,
-                                backgroundColor: `${platformColor}11`,
-                            }}
-                        >
-                            {platformLabel}
-                        </span>
-                        <h2 id="modal-title" className="text-white font-semibold text-lg line-clamp-1">
-                            상세 분석 결과
-                        </h2>
+                <div className="border-b border-white/8 px-5 py-4 sm:px-6">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <span
+                        className="inline-flex rounded-full border px-3 py-1 text-xs font-medium"
+                        style={{
+                          color: platformColor,
+                          borderColor: `${platformColor}33`,
+                          backgroundColor: `${platformColor}14`,
+                        }}
+                      >
+                        {platformLabel}
+                      </span>
+                      <DialogTitle as="h2" className="mt-3 text-2xl font-semibold text-white">
+                        상세 분석 결과
+                      </DialogTitle>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+                        자동 추정 결과와 근거를 함께 보여줍니다. 최종 판단 전에는 원문과 작성 맥락을 직접 확인하세요.
+                      </p>
                     </div>
+
                     <button
-                        onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-                        aria-label="닫기"
+                      type="button"
+                      onClick={onClose}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+                      aria-label="상세 분석 닫기"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     </button>
+                  </div>
                 </div>
 
-                {/* 스크롤 가능한 콘텐츠 영역 */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                <div className="max-h-[78vh] overflow-y-auto px-5 py-5 sm:px-6">
+                  <section className="rounded-[24px] border border-white/8 bg-white/5 p-5">
+                    <h3 className="text-xl font-semibold leading-8 text-white">{result.title}</h3>
+                    <div className="mt-3 flex flex-wrap gap-3 text-sm text-slate-400">
+                      {result.author_name && <span>작성자 {result.author_name}</span>}
+                      {result.published_at && <span>작성일 {result.published_at}</span>}
+                    </div>
+                    {result.snippet && (
+                      <p className="mt-4 text-sm leading-7 text-slate-200">{result.snippet}</p>
+                    )}
+                  </section>
 
-                    {/* 1. 기본 정보 */}
-                    <section>
-                        <h3 className="text-xl font-medium text-white mb-2 leading-relaxed">
-                            {result.title}
-                        </h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                            {result.author_name && <span>✍️ {result.author_name}</span>}
-                            {result.published_at && <span>📅 {result.published_at}</span>}
+                  <section className="mt-6 grid gap-4 md:grid-cols-[1fr_1.2fr]">
+                    <div className="rounded-[24px] border border-white/8 bg-slate-950/40 p-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Trust Score</p>
+                      <div className="mt-3 flex items-end gap-2">
+                        <span className="text-4xl font-semibold text-white">{result.tss ?? 0}</span>
+                        <span className="pb-1 text-sm text-slate-400">/ 100</span>
+                      </div>
+                      <p className="mt-2 text-sm text-slate-300">
+                        {result.tier ? `Tier ${result.tier} · ${TIER_COPY[result.tier] || "추가 확인 필요"}` : "등급 데이터 없음"}
+                      </p>
+
+                      <div className="mt-5 space-y-4">
+                        <div>
+                          <div className="mb-2 flex items-center justify-between text-sm">
+                            <span className="text-slate-300">광고성 차감(CRS)</span>
+                            <span className="text-white">{result.crs ?? 0}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-white/10">
+                            <div className="h-2 rounded-full bg-sky-400" style={{ width: `${result.crs ?? 0}%` }} />
+                          </div>
                         </div>
-                        {result.snippet && (
-                            <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-                                <p className="text-sm text-gray-300 leading-relaxed indent-2">
-                                    &quot;{result.snippet}&quot;
-                                </p>
-                            </div>
-                        )}
-                    </section>
 
-                    {/* 2. 신뢰도 점수 및 등급 */}
-                    <section>
-                        <h4 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            신뢰도 스코어 보드
-                        </h4>
+                        <div>
+                          <div className="mb-2 flex items-center justify-between text-sm">
+                            <span className="text-slate-300">실사용 가점(EQS)</span>
+                            <span className="text-white">{result.eqs ?? 0}</span>
+                          </div>
+                          <div className="h-2 rounded-full bg-white/10">
+                            <div
+                              className="h-2 rounded-full bg-emerald-400"
+                              style={{ width: `${Math.min(result.eqs ?? 0, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                        <div className="grid grid-cols-3 gap-4">
-                            {/* 총점 (TSS) */}
-                            <div className="col-span-3 sm:col-span-1 bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-xl border border-gray-700 flex flex-col items-center justify-center text-center">
-                                <span className="text-xs text-gray-400 font-medium mb-1">총 신뢰도 점수 (TSS)</span>
-                                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-1">
-                                    {result.tss ?? 0}
-                                    <span className="text-sm text-gray-500 font-normal ml-1">/ 100</span>
-                                </div>
-                                <span className="px-2 py-0.5 bg-gray-800 rounded text-xs font-bold text-gray-300">
-                                    Tier {result.tier || 'C'}
+                    <div className="rounded-[24px] border border-white/8 bg-white/5 p-5">
+                      <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
+                        점수 산출 근거
+                      </h3>
+
+                      {result.explanations && result.explanations.length > 0 ? (
+                        <ul className="mt-4 space-y-2">
+                          {result.explanations.map((item) => {
+                            const tone = item.includes("+")
+                              ? "border-emerald-300/10 bg-emerald-300/6 text-emerald-50"
+                              : item.includes("-")
+                                ? "border-rose-300/10 bg-rose-300/6 text-rose-50"
+                                : "border-white/8 bg-white/5 text-slate-200";
+                            const icon = item.includes("+") ? "✓" : item.includes("-") ? "⚠" : "ℹ";
+
+                            return (
+                              <li
+                                key={item}
+                                className={`flex items-start gap-3 rounded-2xl border px-3 py-2 text-sm leading-6 ${tone}`}
+                              >
+                                <span className="mt-0.5" aria-hidden="true">
+                                  {icon}
                                 </span>
-                            </div>
-
-                            {/* 세부 수치 (CRS & EQS) */}
-                            <div className="col-span-3 sm:col-span-2 grid grid-cols-2 gap-4">
-                                <div className="bg-gray-800/30 p-4 rounded-xl border border-gray-700/50 flex flex-col justify-center">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-xs text-gray-400 font-medium">콘텐츠 신뢰성 (CRS)</span>
-                                        <span className="text-sm font-bold text-white">{result.crs ?? 0}/100</span>
-                                    </div>
-                                    <div className="w-full bg-gray-700 rounded-full h-1.5">
-                                        <div className="bg-blue-400 h-1.5 rounded-full" style={{ width: `${result.crs ?? 0}%` }} />
-                                    </div>
-                                    <p className="text-[10px] text-gray-500 mt-2">
-                                        광고/협찬 의심 표현 배제 점수
-                                    </p>
-                                </div>
-                                <div className="bg-gray-800/30 p-4 rounded-xl border border-gray-700/50 flex flex-col justify-center">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-xs text-gray-400 font-medium">경험 품질 (EQS)</span>
-                                        <span className="text-sm font-bold text-white">{result.eqs ?? 0}/100</span>
-                                    </div>
-                                    <div className="w-full bg-gray-700 rounded-full h-1.5">
-                                        <div className="bg-emerald-400 h-1.5 rounded-full" style={{ width: `${Math.min(result.eqs ?? 0, 100)}%` }} />
-                                    </div>
-                                    <p className="text-[10px] text-gray-500 mt-2">
-                                        실사용 후기/단점 언급 등 경험치 가점
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* 3. 분석 근거 상세 내역 */}
-                    <section>
-                        <h4 className="text-sm font-semibold text-gray-400 mb-3 flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                            점수 산출 근거
-                        </h4>
-                        {result.explanations && result.explanations.length > 0 ? (
-                            <ul className="space-y-2">
-                                {result.explanations.map((exp, idx) => {
-                                    const isPositive = exp.includes('+');
-                                    const isNegative = exp.includes('-');
-                                    return (
-                                        <li key={idx} className={`p-3 rounded-lg border flex items-start gap-3 ${isPositive ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-100' :
-                                            isNegative ? 'bg-red-500/5 border-red-500/10 text-red-100' :
-                                                'bg-gray-800/30 border-gray-700/50 text-gray-300'
-                                            }`}>
-                                            <span className={`text-base leading-none mt-0.5 ${isPositive ? 'text-emerald-400' : isNegative ? 'text-red-400' : 'text-gray-500'
-                                                }`}>
-                                                {isPositive ? '✓' : isNegative ? '⚠' : 'ℹ'}
-                                            </span>
-                                            <span className="text-sm">{exp}</span>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        ) : (
-                            <div className="text-center p-4 bg-gray-800/30 rounded-lg border border-gray-700/50">
-                                <p className="text-sm text-gray-500">특출난 광고 패턴이나 실사용 증거가 발견되지 않았습니다.</p>
-                            </div>
-                        )}
-                    </section>
-
+                                <span>{item}</span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <p className="mt-4 text-sm leading-6 text-slate-400">
+                          눈에 띄는 광고 패턴이나 실사용 표현이 많지 않아 중립 결과로 분류됐습니다.
+                        </p>
+                      )}
+                    </div>
+                  </section>
                 </div>
 
-                {/* 하단 푸터 (강조된 원문 이동 액션) */}
-                <div className="p-4 border-t border-gray-800 bg-gray-900/50 flex justify-end gap-3">
+                <div className="flex flex-col-reverse gap-3 border-t border-white/8 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                  <p className="text-xs leading-5 text-slate-400">
+                    원문 이동 전에도 제휴 링크나 광고 문구는 다시 직접 확인하는 것이 안전합니다.
+                  </p>
+                  <div className="flex gap-2 self-end">
                     <button
-                        onClick={onClose}
-                        className="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                      type="button"
+                      onClick={onClose}
+                      className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
                     >
-                        닫기
+                      닫기
                     </button>
                     <a
-                        href={result.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-5 py-2 rounded-lg text-sm font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors flex items-center gap-2"
+                      href={result.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:bg-cyan-300/15"
                     >
-                        원본 페이지로 이동
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
+                      원문 열기
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
                     </a>
+                  </div>
                 </div>
-            </div>
+              </DialogPanel>
+            </TransitionChild>
+          </div>
         </div>
-    );
+      </Dialog>
+    </Transition>
+  );
 }
