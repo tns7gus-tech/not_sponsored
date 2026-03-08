@@ -1,92 +1,94 @@
-"""
-결과 정규화 모듈 - URL 기반 중복 제거 + 공통 스키마 매핑
-"""
 import logging
 
 logger = logging.getLogger(__name__)
 
+TRUST_KEYWORDS = ("내돈내산", "직접 구매", "실사용", "사용기", "방문 후기", "직접 방문")
+
 
 def deduplicate_results(results: list[dict]) -> list[dict]:
-    """URL 기반 중복 제거"""
     seen_urls = set()
     unique = []
-    for r in results:
-        url = r.get("url", "")
-        canonical = r.get("canonical_url", url)
 
-        # URL이나 canonical URL로 중복 체크
+    for result in results:
+        url = result.get("url", "")
+        canonical = result.get("canonical_url", url)
         key = canonical or url
+
         if key and key not in seen_urls:
             seen_urls.add(key)
-            unique.append(r)
+            unique.append(result)
 
     removed = len(results) - len(unique)
     if removed > 0:
-        logger.info(f"중복 제거: {removed}건 제거, {len(unique)}건 남음")
+        logger.info("Removed %s duplicate results", removed)
 
     return unique
 
 
 def sort_results(results: list[dict]) -> list[dict]:
-    """결과 정렬 - 현재는 플랫폼 다양성 기준으로 인터리빙"""
-    # 플랫폼별로 그룹화
-    by_platform: dict[str, list[dict]] = {}
-    for r in results:
-        platform = r.get("platform", "unknown")
-        if platform not in by_platform:
-            by_platform[platform] = []
-        by_platform[platform].append(r)
+    if not results:
+        return []
 
-    # 라운드로빈 인터리빙 (다양한 플랫폼 결과가 번갈아 나오도록)
+    seeded_results = sorted(results, key=_trust_bias, reverse=True)
+
+    by_platform: dict[str, list[dict]] = {}
+    for result in seeded_results:
+        platform = result.get("platform", "unknown")
+        by_platform.setdefault(platform, []).append(result)
+
     sorted_results = []
     platform_lists = list(by_platform.values())
-    max_len = max(len(lst) for lst in platform_lists) if platform_lists else 0
+    max_len = max(len(items) for items in platform_lists) if platform_lists else 0
 
-    for i in range(max_len):
-        for lst in platform_lists:
-            if i < len(lst):
-                sorted_results.append(lst[i])
+    for index in range(max_len):
+        for items in platform_lists:
+            if index < len(items):
+                sorted_results.append(items[index])
 
     return sorted_results
 
 
 def build_summary(results: list[dict]) -> dict:
-    """결과 요약 정보 생성 (Sprint 1 기본 버전)"""
-    platforms = list(set(r.get("platform", "") for r in results))
+    platforms = list(set(result.get("platform", "") for result in results))
     return {
         "total_results": len(results),
         "platforms": platforms,
     }
 
+
 def build_summary_from_models(results: list) -> dict:
-    """결과 요약 정보 생성 (Sprint 2: 신뢰도 및 신호 기반)"""
     if not results:
-        return {"total_results": 0, "platforms": [], "tier_distribution": {}, "pros": [], "cons": [], "overall_status": "UNKNOWN"}
+        return {
+            "total_results": 0,
+            "platforms": [],
+            "tier_distribution": {},
+            "pros": [],
+            "cons": [],
+            "overall_status": "UNKNOWN",
+        }
 
-    platforms = list(set(r.platform for r in results))
+    platforms = list(set(result.platform for result in results))
     total_results = len(results)
-    
     tier_distribution = {"S": 0, "A": 0, "B": 0, "C": 0, "F": 0}
-    pros = []
-    cons = []
-    
-    for r in results:
-        if r.tier in tier_distribution:
-            tier_distribution[r.tier] += 1
-            
-        for sig in r.extracted_signals:
-            if sig.signal_type == "REAL_DRAWBACK":
-                cons.append(f"단점 리포트: '{sig.matched_text}' ({r.platform})")
-            elif sig.signal_group == "REAL_USAGE":
-                pros.append(f"실사용 인증: '{sig.matched_text}' ({r.platform})")
+    pros: list[str] = []
+    cons: list[str] = []
 
-    # 중복 제거 및 최대 3개 매핑
+    for result in results:
+        if result.tier in tier_distribution:
+            tier_distribution[result.tier] += 1
+
+        for signal in result.extracted_signals:
+            if signal.signal_type == "REAL_DRAWBACK":
+                cons.append(f"단점 언급: '{signal.matched_text}' ({result.platform})")
+            elif signal.signal_group == "REAL_USAGE":
+                pros.append(f"실사용 정황: '{signal.matched_text}' ({result.platform})")
+
     unique_cons = list(dict.fromkeys(cons))[:3]
     unique_pros = list(dict.fromkeys(pros))[:3]
-    
+
     high_trust_count = tier_distribution.get("S", 0) + tier_distribution.get("A", 0)
     ad_count = tier_distribution.get("F", 0)
-    
+
     if ad_count > (total_results * 0.5):
         overall = "AD_DENSE"
     elif high_trust_count >= (total_results * 0.3):
@@ -100,5 +102,10 @@ def build_summary_from_models(results: list) -> dict:
         "tier_distribution": tier_distribution,
         "pros": unique_pros,
         "cons": unique_cons,
-        "overall_status": overall
+        "overall_status": overall,
     }
+
+
+def _trust_bias(result: dict) -> int:
+    text = f"{result.get('title', '')} {result.get('snippet', '')}".lower()
+    return sum(1 for keyword in TRUST_KEYWORDS if keyword in text)
