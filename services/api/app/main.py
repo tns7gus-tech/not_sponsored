@@ -1,7 +1,4 @@
-"""
-신뢰도 기반 구매 리서치 에이전트 FastAPI 엔트리포인트.
-"""
-
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -23,21 +20,48 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+DB_STARTUP_RETRIES = 15
+DB_RETRY_DELAY_SECONDS = 4
+
+
+async def _prepare_database() -> None:
+    last_error: Exception | None = None
+
+    for attempt in range(1, DB_STARTUP_RETRIES + 1):
+        try:
+            logger.info(
+                "Preparing database schema (attempt %s/%s)",
+                attempt,
+                DB_STARTUP_RETRIES,
+            )
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("Database schema is ready")
+            return
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+            logger.exception(
+                "Database startup failed (attempt %s/%s)",
+                attempt,
+                DB_STARTUP_RETRIES,
+            )
+            if attempt == DB_STARTUP_RETRIES:
+                break
+            await asyncio.sleep(DB_RETRY_DELAY_SECONDS)
+
+    raise RuntimeError("Database was not reachable during startup") from last_error
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """앱 시작 시 필요한 테이블을 준비한다."""
-    logger.info("API 시작 - DB 테이블 초기화")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("DB 테이블 준비 완료")
+    await _prepare_database()
     yield
-    logger.info("API 종료")
+    logger.info("API shutdown complete")
 
 
 app = FastAPI(
     title="Trust Research Agent API",
-    description="광고성 가능성과 근거 신호를 함께 보여주는 구매 리서치 API",
+    description="Purchase research API that separates ad signals from evidence-based trust signals",
     version="0.1.0",
     lifespan=lifespan,
 )
@@ -78,5 +102,4 @@ app.include_router(feedback_router)
 
 @app.get("/health")
 async def health_check():
-    """헬스 체크 엔드포인트."""
     return {"status": "ok", "service": "trust-research-agent-api"}
