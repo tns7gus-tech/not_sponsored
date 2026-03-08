@@ -9,25 +9,42 @@ interface Props {
   isLoading?: boolean;
 }
 
-const FALLBACK_QUERIES = [
-  "아이폰17",
-  "나이키 페가수스 42",
-  "쿠션 파운데이션",
-  "에어프라이어",
-  "갤럭시 S26",
-  "건성 피부 선크림",
+const HISTORY_KEY = "not_sponsored_history";
+const TRENDING_LIMIT = 6;
+const ROTATING_FALLBACK_QUERIES = [
+  "러닝화 추천",
+  "노이즈 캔슬링 이어폰",
+  "가성비 태블릿",
+  "건성 피부 토너",
+  "무선 청소기",
+  "블랙박스 비교",
+  "캠핑 의자 추천",
+  "단백질 쉐이크",
+  "초등학생 책가방",
+  "공기청정기 필터",
+  "커피머신 입문용",
+  "수분크림 추천",
+  "트레일 러닝화",
+  "게이밍 마우스",
+  "전기면도기 비교",
+  "고양이 자동급식기",
+  "목 어깨 마사지기",
+  "홈카페 원두",
 ];
 
 export default function SearchInput({ onSearch, isLoading }: Props) {
   const [query, setQuery] = useState("");
-  const [trendingQueries, setTrendingQueries] = useState<string[]>(FALLBACK_QUERIES);
+  const [trendingQueries, setTrendingQueries] = useState<string[]>([]);
 
   useEffect(() => {
     async function fetchTrending() {
-      const queries = await getTrendingSearches();
-      if (queries.length > 0) {
-        setTrendingQueries(queries);
-      }
+      const apiQueries = await getTrendingSearches();
+      const recentQueries = getRecentHistoryQueries();
+      const fallbackQueries = buildRotatingFallbackQueries();
+
+      setTrendingQueries(
+        mergeUniqueQueries(apiQueries, recentQueries, fallbackQueries).slice(0, TRENDING_LIMIT),
+      );
     }
 
     fetchTrending();
@@ -49,7 +66,7 @@ export default function SearchInput({ onSearch, isLoading }: Props) {
             제품명 또는 질문
           </label>
           <p id="search-help" className="text-sm text-slate-400">
-            예: `아이폰17 배터리 후기`, `건성 피부 선크림 추천`, `러닝화 실사용 비교`
+            예: `아이폰 17 배터리 후기`, `건성 피부 선크림 추천`, `무선청소기 광고성 리뷰 비교`
           </p>
         </div>
 
@@ -104,25 +121,89 @@ export default function SearchInput({ onSearch, isLoading }: Props) {
         </div>
       </form>
 
-      <div className="mt-6">
-        <p className="mb-3 text-sm font-medium text-slate-300">빠른 시작</p>
-        <div className="flex flex-wrap gap-2.5" role="group" aria-label="추천 검색어">
-          {trendingQueries.map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => {
-                setQuery(item);
-                onSearch(item);
-              }}
-              className="min-h-[40px] rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:bg-cyan-300/10 hover:text-white"
-              disabled={isLoading}
-            >
-              {item}
-            </button>
-          ))}
+      {trendingQueries.length > 0 && (
+        <div className="mt-6">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-slate-300">지금 많이 보거나 최근에 찾은 키워드</p>
+            <p className="text-xs text-slate-500">검색 데이터에 따라 바뀝니다</p>
+          </div>
+          <div className="flex flex-wrap gap-2.5" role="group" aria-label="추천 검색어">
+            {trendingQueries.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => {
+                  setQuery(item);
+                  onSearch(item);
+                }}
+                className="min-h-[40px] rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-cyan-300/30 hover:bg-cyan-300/10 hover:text-white"
+                disabled={isLoading}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
+}
+
+function getRecentHistoryQueries(): string[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const stored = localStorage.getItem(HISTORY_KEY);
+    if (!stored) {
+      return [];
+    }
+
+    const parsed = JSON.parse(stored) as Array<{ query?: string }>;
+    return parsed
+      .map((item) => normalizeQuery(item?.query))
+      .filter((item): item is string => Boolean(item));
+  } catch {
+    return [];
+  }
+}
+
+function buildRotatingFallbackQueries(): string[] {
+  const poolSize = ROTATING_FALLBACK_QUERIES.length;
+  const daySeed = Math.floor(Date.now() / 86_400_000);
+  const startIndex = daySeed % poolSize;
+  const step = 5;
+
+  return Array.from({ length: poolSize }, (_, offset) => {
+    return ROTATING_FALLBACK_QUERIES[(startIndex + (offset * step)) % poolSize];
+  });
+}
+
+function mergeUniqueQueries(...groups: string[][]): string[] {
+  const merged: string[] = [];
+  const seen = new Set<string>();
+
+  for (const group of groups) {
+    for (const item of group) {
+      const normalized = normalizeQuery(item);
+      if (!normalized) {
+        continue;
+      }
+
+      const dedupeKey = normalized.toLocaleLowerCase("ko-KR");
+      if (seen.has(dedupeKey)) {
+        continue;
+      }
+
+      seen.add(dedupeKey);
+      merged.push(normalized);
+    }
+  }
+
+  return merged;
+}
+
+function normalizeQuery(value?: string | null) {
+  return (value || "").trim();
 }

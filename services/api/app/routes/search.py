@@ -1,13 +1,7 @@
-"""
-검색 API 라우터.
-
-POST /api/search
-GET  /api/search/{job_id}
-"""
-
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
@@ -30,7 +24,30 @@ from app.services.search_orchestrator import run_search_pipeline
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/search", tags=["검색"])
+TRENDING_LIMIT = 6
+TRENDING_LOOKBACK_DAYS = 30
+ROTATING_FALLBACK_QUERIES = [
+    "러닝화 추천",
+    "노이즈 캔슬링 이어폰",
+    "가성비 태블릿",
+    "건성 피부 토너",
+    "무선 청소기",
+    "블랙박스 비교",
+    "캠핑 의자 추천",
+    "단백질 쉐이크",
+    "초등학생 책가방",
+    "공기청정기 필터",
+    "커피머신 입문용",
+    "수분크림 추천",
+    "트레일 러닝화",
+    "게이밍 마우스",
+    "전기면도기 비교",
+    "고양이 자동급식기",
+    "목 어깨 마사지기",
+    "홈카페 원두",
+]
+
+router = APIRouter(prefix="/api/search", tags=["search"])
 
 
 @router.post("", response_model=SearchJobResponse)
@@ -41,8 +58,7 @@ async def create_search(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    """검색 작업을 생성하고 백그라운드 파이프라인을 시작한다."""
-    logger.info("검색 요청: '%s'", req.query)
+    logger.info("Search request: '%s'", req.query)
 
     job = QueryJob(raw_query=req.query, status=JobStatus.QUEUED.value)
     db.add(job)
@@ -55,34 +71,47 @@ async def create_search(
 
 @router.get("/trending", response_model=list[str])
 async def get_trending_searches(db: AsyncSession = Depends(get_db)):
-    """최근 자주 검색된 키워드를 반환한다."""
-    query = (
-        select(QueryJob.raw_query)
-        .where(QueryJob.status == JobStatus.COMPLETED.value)
-        .group_by(QueryJob.raw_query)
-        .order_by(func.count(QueryJob.id).desc())
-        .limit(6)
-    )
-    result = await db.execute(query)
-    trending = result.scalars().all()
+    lookback_start = datetime.utcnow() - timedelta(days=TRENDING_LOOKBACK_DAYS)
 
-    default_queries = [
-        "아이폰17",
-        "나이키 페가수스 42",
-        "쿠션 파운데이션",
-        "에어프라이어",
-        "갤럭시 S26",
-        "건성 피부 선크림",
+    trending_query = (
+        select(
+            QueryJob.raw_query,
+            func.count(QueryJob.id).label("hits"),
+            func.max(QueryJob.created_at).label("last_seen"),
+        )
+        .where(
+            QueryJob.status == JobStatus.COMPLETED.value,
+            QueryJob.created_at >= lookback_start,
+        )
+        .group_by(QueryJob.raw_query)
+        .order_by(func.count(QueryJob.id).desc(), func.max(QueryJob.created_at).desc())
+        .limit(TRENDING_LIMIT * 2)
+    )
+    trending_rows = (await db.execute(trending_query)).all()
+    trending_queries = [
+        normalized
+        for raw_query, _, _ in trending_rows
+        if (normalized := _normalize_query(raw_query))
     ]
 
-    final_queries = list(trending)
-    for item in default_queries:
-        if len(final_queries) >= 6:
-            break
-        if item not in final_queries:
-            final_queries.append(item)
+    recent_query = (
+        select(QueryJob.raw_query)
+        .where(QueryJob.raw_query.is_not(None))
+        .order_by(QueryJob.created_at.desc())
+        .limit(TRENDING_LIMIT * 6)
+    )
+    recent_rows = await db.execute(recent_query)
+    recent_queries = [
+        normalized
+        for raw_query in recent_rows.scalars().all()
+        if (normalized := _normalize_query(raw_query))
+    ]
 
-    return final_queries
+    return _merge_unique_queries(
+        trending_queries,
+        recent_queries,
+        _rotating_fallback_queries(),
+    )[:TRENDING_LIMIT]
 
 
 @router.get("/{job_id}", response_model=SearchJobDetailResponse)
@@ -91,7 +120,6 @@ async def get_search_results(
     platform: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
 ):
-    """검색 결과와 진행 상태를 반환한다."""
     job = await db.get(QueryJob, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="검색 작업을 찾을 수 없습니다.")
@@ -170,12 +198,46 @@ async def get_search_results(
     )
 
 
+def _normalize_query(raw_query: Optional[str]) -> str:
+    return (raw_query or "").strip()
+
+
+def _merge_unique_queries(*groups: list[str]) -> list[str]:
+    merged: list[str] = []
+    seen: set[str] = set()
+
+    for group in groups:
+        for item in group:
+            normalized = _normalize_query(item)
+            if not normalized:
+                continue
+
+            dedupe_key = normalized.casefold()
+            if dedupe_key in seen:
+                continue
+
+            seen.add(dedupe_key)
+            merged.append(normalized)
+
+    return merged
+
+
+def _rotating_fallback_queries() -> list[str]:
+    pool_size = len(ROTATING_FALLBACK_QUERIES)
+    start_index = datetime.utcnow().date().toordinal() % pool_size
+    step = 5
+
+    return [
+        ROTATING_FALLBACK_QUERIES[(start_index + (offset * step)) % pool_size]
+        for offset in range(pool_size)
+    ]
+
+
 async def _run_pipeline_with_session(job_id: str, raw_query: str):
-    """백그라운드 검색 파이프라인을 별도 세션에서 실행한다."""
     from app.database import async_session
 
     async with async_session() as db:
         try:
             await run_search_pipeline(job_id, raw_query, db)
         except Exception as exc:
-            logger.error("백그라운드 검색 파이프라인 오류: %s", exc, exc_info=True)
+            logger.error("Background search pipeline error: %s", exc, exc_info=True)

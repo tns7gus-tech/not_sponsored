@@ -1,27 +1,20 @@
-/**
- * API 클라이언트 유틸리티
- * 백엔드 API 호출을 위한 함수 모음
- */
-
 function getApiBase(): string {
-  // 1. 환경변수가 명시적으로 설정되어 있으면 사용
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  // 2. 브라우저 환경에서 Railway 도메인이면 프로덕션 백엔드 사용
+
   if (typeof window !== "undefined") {
     const hostname = window.location.hostname;
     if (hostname.includes("railway.app")) {
       return "https://notsponsoredbackend-production.up.railway.app";
     }
   }
-  // 3. 로컬 개발 환경
+
   return "http://localhost:8000";
 }
 
 const API_BASE = getApiBase();
 
-/** 검색 결과 소스 타입 */
 export interface SourceResult {
   id: string;
   platform: string;
@@ -44,14 +37,12 @@ export interface SourceResult {
   explanations?: string[];
 }
 
-/** 검색 진행 상태 */
 export interface SearchProgress {
   connectors_done: number;
   connectors_total: number;
   results_collected: number;
 }
 
-/** 검색 요약 */
 export interface SearchSummary {
   total_results: number;
   platforms: string[];
@@ -61,7 +52,6 @@ export interface SearchSummary {
   overall_status?: string;
 }
 
-/** 검색 작업 상세 응답 */
 export interface SearchJobDetail {
   job_id: string;
   status: "queued" | "running" | "completed" | "failed";
@@ -75,31 +65,35 @@ export interface SearchJobDetail {
   error_message?: string;
 }
 
-/** 검색 시작 */
 export async function createSearch(query: string): Promise<{ job_id: string; status: string }> {
   const res = await fetch(`${API_BASE}/api/search`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query }),
   });
-  if (!res.ok) throw new Error(`검색 요청 실패: ${res.status}`);
+
+  if (!res.ok) {
+    throw new Error(`검색 요청 실패: ${res.status}`);
+  }
+
   return res.json();
 }
 
-/** 검색 결과 조회 */
-export async function getSearchResults(
-  jobId: string,
-  platform?: string
-): Promise<SearchJobDetail> {
+export async function getSearchResults(jobId: string, platform?: string): Promise<SearchJobDetail> {
   const params = new URLSearchParams();
-  if (platform) params.set("platform", platform);
+  if (platform) {
+    params.set("platform", platform);
+  }
+
   const url = `${API_BASE}/api/search/${jobId}${params.toString() ? `?${params}` : ""}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`결과 조회 실패: ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`결과 조회 실패: ${res.status}`);
+  }
+
   return res.json();
 }
 
-/** URL 분석 작업 상세 응답 */
 export interface UrlAnalysisJobDetail {
   job_id: string;
   status: "queued" | "running" | "completed" | "failed";
@@ -110,32 +104,34 @@ export interface UrlAnalysisJobDetail {
   error_message?: string;
 }
 
-/** URL 분석 시작 */
 export async function createUrlAnalysis(url: string): Promise<{ job_id: string; status: string }> {
   const res = await fetch(`${API_BASE}/api/analyze-url`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ url }),
   });
-  if (!res.ok) throw new Error(`URL 분석 요청 실패: ${res.status}`);
+
+  if (!res.ok) {
+    throw new Error(`URL 분석 요청 실패: ${res.status}`);
+  }
+
   return res.json();
 }
 
-/** URL 분석 결과 조회 */
-export async function getUrlAnalysis(
-  jobId: string
-): Promise<UrlAnalysisJobDetail> {
+export async function getUrlAnalysis(jobId: string): Promise<UrlAnalysisJobDetail> {
   const url = `${API_BASE}/api/analyze-url/${jobId}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`분석 결과 조회 실패: ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`분석 결과 조회 실패: ${res.status}`);
+  }
+
   return res.json();
 }
 
-/** 사용자 피드백 제출 */
 export async function submitFeedback(
   feedbackType: "helpful" | "ad_suspected",
   sourceResultId?: string,
-  url?: string
+  url?: string,
 ): Promise<{ id: string; status: string }> {
   const res = await fetch(`${API_BASE}/api/feedback`, {
     method: "POST",
@@ -143,14 +139,17 @@ export async function submitFeedback(
     body: JSON.stringify({
       feedback_type: feedbackType,
       source_result_id: sourceResultId,
-      url: url,
+      url,
     }),
   });
-  if (!res.ok) throw new Error(`피드백 제출 실패: ${res.status}`);
+
+  if (!res.ok) {
+    throw new Error(`피드백 제출 실패: ${res.status}`);
+  }
+
   return res.json();
 }
 
-/** 플랫폼 표시명 매핑 */
 export const PLATFORM_LABELS: Record<string, string> = {
   naver_blog: "네이버 블로그",
   naver_cafe: "네이버 카페",
@@ -158,10 +157,9 @@ export const PLATFORM_LABELS: Record<string, string> = {
   naver_shopping: "네이버 쇼핑",
   youtube: "YouTube",
   web: "웹",
-  web_analysis: "웹 페이지",
+  web_analysis: "웹페이지",
 };
 
-/** 플랫폼 컬러 매핑 */
 export const PLATFORM_COLORS: Record<string, string> = {
   naver_blog: "#03C75A",
   naver_cafe: "#03C75A",
@@ -172,26 +170,19 @@ export const PLATFORM_COLORS: Record<string, string> = {
   web_analysis: "#38BDF8",
 };
 
-/** 트렌딩 검색어 가져오기 */
 export async function getTrendingSearches(): Promise<string[]> {
   try {
     const res = await fetch(`${API_BASE}/api/search/trending`, {
-      // 짧은 캐싱 또는 필요 시 no-cache 적용 가능
       next: { revalidate: 60 },
     });
+
     if (!res.ok) {
       throw new Error(`Failed to fetch trending searches: ${res.status}`);
     }
+
     return res.json();
   } catch (error) {
-    console.warn("트렌딩 검색어를 가져오는데 실패했습니다. 기본값을 사용합니다.", error);
-    return [
-      "아이폰17",
-      "나이키 페가수스 42",
-      "쿠션 파운데이션",
-      "에어프라이어",
-      "갤럭시 S26",
-      "건성 피부 선크림",
-    ];
+    console.warn("Failed to fetch trending searches. Falling back to local suggestions.", error);
+    return [];
   }
 }
