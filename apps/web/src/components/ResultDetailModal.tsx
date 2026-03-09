@@ -4,6 +4,7 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@
 import { Fragment } from "react";
 
 import { PLATFORM_COLORS, PLATFORM_LABELS, type SourceResult } from "@/lib/api";
+import ResultSignalGroups from "./ResultSignalGroups";
 
 interface Props {
   result: SourceResult;
@@ -97,14 +98,12 @@ export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
                       {result.author_name && <span>작성자 {result.author_name}</span>}
                       {result.published_at && <span>작성일 {result.published_at}</span>}
                     </div>
-                    {result.snippet && (
-                      <p className="mt-4 text-sm leading-7 text-slate-200">{result.snippet}</p>
-                    )}
+                    {result.snippet && <p className="mt-4 text-sm leading-7 text-slate-200">{result.snippet}</p>}
                   </section>
 
                   <section className="mt-6 grid gap-4 md:grid-cols-[1fr_1.2fr]">
                     <div className="rounded-[24px] border border-white/8 bg-slate-950/40 p-5">
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Trust Score</p>
+                      <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">신뢰 점수</p>
                       <div className="mt-3 flex items-end gap-2">
                         <span className="text-4xl font-semibold text-white">{result.tss ?? 0}</span>
                         <span className="pb-1 text-sm text-slate-400">/ 100</span>
@@ -140,38 +139,7 @@ export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
                     </div>
 
                     <div className="rounded-[24px] border border-white/8 bg-white/5 p-5">
-                      <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
-                        점수 산출 근거
-                      </h3>
-
-                      {result.explanations && result.explanations.length > 0 ? (
-                        <ul className="mt-4 space-y-2">
-                          {result.explanations.map((item) => {
-                            const tone = item.includes("+")
-                              ? "border-emerald-300/10 bg-emerald-300/6 text-emerald-50"
-                              : item.includes("-")
-                                ? "border-rose-300/10 bg-rose-300/6 text-rose-50"
-                                : "border-white/8 bg-white/5 text-slate-200";
-                            const icon = item.includes("+") ? "✓" : item.includes("-") ? "⚠" : "ℹ";
-
-                            return (
-                              <li
-                                key={item}
-                                className={`flex items-start gap-3 rounded-2xl border px-3 py-2 text-sm leading-6 ${tone}`}
-                              >
-                                <span className="mt-0.5" aria-hidden="true">
-                                  {icon}
-                                </span>
-                                <span>{item}</span>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      ) : (
-                        <p className="mt-4 text-sm leading-6 text-slate-400">
-                          눈에 띄는 광고 패턴이나 실사용 표현이 많지 않아 중립 결과로 분류됐습니다.
-                        </p>
-                      )}
+                      <ResultSignalGroups result={result} title="이 결과에 영향을 준 신호" />
                     </div>
                   </section>
                 </div>

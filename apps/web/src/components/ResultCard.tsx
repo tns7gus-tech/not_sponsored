@@ -5,6 +5,7 @@ import { useState } from "react";
 import { PLATFORM_COLORS, PLATFORM_LABELS, submitFeedback, type SourceResult } from "@/lib/api";
 import ResultCardActions from "./ResultCardActions";
 import ResultDetailModal from "./ResultDetailModal";
+import ResultSignalGroups from "./ResultSignalGroups";
 
 interface Props {
   result: SourceResult;
@@ -101,30 +102,9 @@ export default function ResultCard({ result, isComparing, onCompareToggle, disab
 
           {result.snippet && <p className="mt-4 line-clamp-3 text-sm leading-7 text-slate-200">{result.snippet}</p>}
 
-          {result.explanations && result.explanations.length > 0 && (
-            <ul className="mt-5 grid gap-2">
-              {result.explanations.slice(0, 3).map((explanation) => {
-                const tone = explanation.includes("+")
-                  ? "border-emerald-300/10 bg-emerald-300/6 text-emerald-50"
-                  : explanation.includes("-")
-                    ? "border-rose-300/10 bg-rose-300/6 text-rose-50"
-                    : "border-white/8 bg-white/5 text-slate-200";
-                const marker = explanation.includes("+") ? "+" : explanation.includes("-") ? "-" : "i";
-
-                return (
-                  <li
-                    key={explanation}
-                    className={`flex items-start gap-2 rounded-2xl border px-3 py-2 text-sm leading-6 ${tone}`}
-                  >
-                    <span className="mt-0.5 text-sm" aria-hidden="true">
-                      {marker}
-                    </span>
-                    <span>{explanation}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <div className="mt-5">
+            <ResultSignalGroups result={result} compact />
+          </div>
 
           <ResultCardActions
             result={result}

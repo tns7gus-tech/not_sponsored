@@ -39,7 +39,7 @@ export default function SearchResultsPage({
       setData(result);
       return result.status;
     } catch {
-      setError("결과를 불러오는 데 실패했습니다.");
+      setError("검색 결과를 불러오는 데 실패했습니다.");
       return "failed";
     }
   }, [jobId]);
@@ -83,7 +83,7 @@ export default function SearchResultsPage({
             </button>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Search Session</p>
+              <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">검색 세션</p>
               <h1 className="mt-1 text-2xl font-semibold text-white">리서치 결과</h1>
             </div>
           </div>
@@ -127,7 +127,7 @@ export default function SearchResultsPage({
             >
               <div className="flex flex-col gap-3 border-b border-white/8 pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Session Summary</p>
+                  <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">리서치 요약</p>
                   <h2 id="search-summary-title" className="mt-2 text-2xl font-semibold text-white">
                     {data.query} 리서치 요약
                   </h2>
@@ -246,7 +246,7 @@ export default function SearchResultsPage({
               <ResultList results={data.results} platforms={data.summary?.platforms || []} />
             ) : (
               <section className="rounded-[28px] border border-white/10 bg-white/5 p-8 text-center text-slate-300">
-                수집된 결과가 아직 없습니다. API 키 설정 또는 커넥터 연결 상태를 확인해보세요.
+                수집된 결과가 충분하지 않습니다. 검색어를 더 구체적으로 입력하거나 공개 URL 분석으로 다시 시도해보세요.
               </section>
             )}
 

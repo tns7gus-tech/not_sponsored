@@ -4,6 +4,7 @@ import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import ResultCard from "@/components/ResultCard";
+import UrlAnalysisProgress from "@/components/UrlAnalysisProgress";
 import { getUrlAnalysis, type UrlAnalysisJobDetail } from "@/lib/api";
 
 export default function AnalyzeResultPage({
@@ -22,7 +23,7 @@ export default function AnalyzeResultPage({
       setData(result);
       return result.status;
     } catch {
-      setError("분석 결과를 불러오는 데 실패했습니다.");
+      setError("URL 분석 결과를 불러오는 데 실패했습니다.");
       return "failed";
     }
   }, [jobId]);
@@ -66,7 +67,7 @@ export default function AnalyzeResultPage({
             </button>
 
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">Single URL Review</p>
+              <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">단일 URL 검토</p>
               <h1 className="mt-1 text-2xl font-semibold text-white">URL 분석 결과</h1>
             </div>
           </div>
@@ -94,24 +95,7 @@ export default function AnalyzeResultPage({
           </section>
         )}
 
-        {isAnalyzing && (
-          <section
-            aria-live="polite"
-            aria-busy="true"
-            className="mx-auto mt-16 max-w-3xl rounded-[30px] border border-white/10 bg-[rgba(9,17,29,0.78)] p-8 text-center shadow-[0_24px_72px_rgba(4,10,20,0.28)] backdrop-blur-xl"
-          >
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-fuchsia-300/20 bg-fuchsia-300/10">
-              <svg className="h-8 w-8 animate-spin text-fuchsia-200" viewBox="0 0 24 24" aria-hidden="true">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            </div>
-            <h2 className="mt-6 text-2xl font-semibold text-white">공개 URL을 안전하게 분석하는 중입니다</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-              페이지를 불러오기 전에 공개 웹 주소 여부와 내부망 차단 규칙을 먼저 확인하고, HTML에서 요약 가능한 본문만 추출합니다.
-            </p>
-          </section>
-        )}
+        {isAnalyzing && <UrlAnalysisProgress url={data?.url} />}
 
         {isDone && data?.result && (
           <>
@@ -124,7 +108,7 @@ export default function AnalyzeResultPage({
 
         {isDone && !data?.result && !error && (
           <section className="rounded-[28px] border border-white/10 bg-white/5 p-8 text-center text-slate-300">
-            분석은 완료됐지만 표시할 결과가 없습니다.
+            분석은 완료됐지만 표시할 수 있는 결과가 아직 없습니다. 다른 공개 URL로 다시 시도해보세요.
           </section>
         )}
 

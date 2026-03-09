@@ -110,10 +110,10 @@ export default function SearchInput({ onSearch, isLoading }: Props) {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    분석 중
+                    리포트 생성 중
                   </span>
                 ) : (
-                  "검색"
+                  "리포트 만들기"
                 )}
               </button>
             </div>
@@ -124,8 +124,8 @@ export default function SearchInput({ onSearch, isLoading }: Props) {
       {trendingQueries.length > 0 && (
         <div className="mt-6">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-300">지금 많이 보거나 최근에 찾은 키워드</p>
-            <p className="text-xs text-slate-500">검색 데이터에 따라 바뀝니다</p>
+            <p className="text-sm font-medium text-slate-300">지금 많이 찾거나 최근에 살펴본 주제</p>
+            <p className="text-xs text-slate-500">실시간 반응과 최근 검색이 함께 반영됩니다</p>
           </div>
           <div className="flex flex-wrap gap-2.5" role="group" aria-label="추천 검색어">
             {trendingQueries.map((item) => (
