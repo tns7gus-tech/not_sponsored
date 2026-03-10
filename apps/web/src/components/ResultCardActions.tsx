@@ -20,18 +20,18 @@ export default function ResultCardActions({
   disabledCompare,
 }: ResultCardActionsProps) {
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+    <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap gap-2" role="group" aria-label="결과 피드백">
         <button
           type="button"
           onClick={(e) => handleFeedback(e, "helpful")}
           disabled={feedbackState !== null}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition focus-visible:ring-4 focus-visible:ring-[#3182f61f] ${
             feedbackState === "helpful"
-              ? "border border-emerald-500/30 bg-emerald-500/20 text-emerald-300"
+              ? "bg-[#eef9f3] text-[#1b7f5a]"
               : feedbackState === "ad_suspected"
-                ? "cursor-not-allowed text-slate-500 opacity-40"
-                : "border border-transparent bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-white"
+                ? "cursor-not-allowed bg-[#f2f4f6] text-[#b0b8c1] opacity-50"
+                : "bg-[#f2f4f6] text-[#4e5968] hover:bg-[#e9edf2]"
           }`}
           aria-label={feedbackState === "helpful" ? "도움됨 피드백이 제출되었습니다" : "이 결과가 도움이 되었나요"}
           aria-pressed={feedbackState === "helpful"}
@@ -46,12 +46,12 @@ export default function ResultCardActions({
           type="button"
           onClick={(e) => handleFeedback(e, "ad_suspected")}
           disabled={feedbackState !== null}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition focus-visible:ring-4 focus-visible:ring-[#3182f61f] ${
             feedbackState === "ad_suspected"
-              ? "border border-rose-500/30 bg-rose-500/20 text-rose-300"
+              ? "bg-[#fff3f2] text-[#d92d20]"
               : feedbackState === "helpful"
-                ? "cursor-not-allowed text-slate-500 opacity-40"
-                : "border border-transparent bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-white"
+                ? "cursor-not-allowed bg-[#f2f4f6] text-[#b0b8c1] opacity-50"
+                : "bg-[#f2f4f6] text-[#4e5968] hover:bg-[#e9edf2]"
           }`}
           aria-label={feedbackState === "ad_suspected" ? "광고 의심 피드백이 제출되었습니다" : "이 결과가 광고 같다고 느껴지나요"}
           aria-pressed={feedbackState === "ad_suspected"}
@@ -74,12 +74,12 @@ export default function ResultCardActions({
               }
             }}
             disabled={disabledCompare && !isComparing}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition focus-visible:ring-4 focus-visible:ring-[#3182f61f] ${
               isComparing
-                ? "border border-indigo-500/30 bg-indigo-500/20 text-indigo-200"
+                ? "bg-[#eef4ff] text-[#3182f6]"
                 : disabledCompare
-                  ? "cursor-not-allowed bg-slate-900/40 text-slate-500 opacity-50"
-                  : "border border-transparent bg-slate-900/70 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  ? "cursor-not-allowed bg-[#f2f4f6] text-[#b0b8c1] opacity-50"
+                  : "bg-[#f2f4f6] text-[#4e5968] hover:bg-[#e9edf2]"
             }`}
             aria-pressed={isComparing}
             aria-label={
@@ -103,7 +103,7 @@ export default function ResultCardActions({
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
           aria-label={`원문 보기: ${result.title} (새 탭에서 열림)`}
-          className="inline-flex items-center gap-1.5 rounded-md py-1 text-sm font-medium text-cyan-300 transition-colors hover:text-cyan-200 focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          className="inline-flex items-center gap-1.5 rounded-full bg-[#eef4ff] px-3 py-2 text-xs font-semibold text-[#3182f6] transition hover:bg-[#dbeafe]"
         >
           원문 보기
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

@@ -19,21 +19,19 @@ export default function CompareBasket({
     <div
       role="region"
       aria-label="제품 비교 바구니"
-      className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-1/2 z-40 flex w-[min(92vw,720px)] -translate-x-1/2 flex-col gap-3 rounded-[24px] border border-indigo-300/20 bg-[rgba(9,17,29,0.92)] p-4 shadow-[0_24px_72px_rgba(4,10,20,0.36)] backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between"
+      className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] left-1/2 z-40 flex w-[min(92vw,760px)] -translate-x-1/2 flex-col gap-3 rounded-[28px] border border-[#e5e8eb] bg-white p-4 shadow-[0_18px_48px_rgba(15,23,42,0.1)] sm:flex-row sm:items-center sm:justify-between"
     >
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-200/80">Compare Basket</p>
-        <h4 className="mt-1 text-sm font-semibold text-white">비교 후보 {compareList.length}/3</h4>
-        <p className="mt-1 truncate text-xs text-slate-300">
-          {compareList.map((item) => item.title).join(" · ")}
-        </p>
+        <p className="text-xs font-semibold tracking-[0.18em] text-[#8b95a1]">비교 바구니</p>
+        <h4 className="mt-1 text-base font-semibold text-[#191f28]">비교 후보 {compareList.length}/3</h4>
+        <p className="mt-1 truncate text-sm text-[#6b7684]">{compareList.map((item) => item.title).join(" · ")}</p>
       </div>
 
       <div className="flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={() => setCompareList([])}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f2f4f6] text-[#4e5968] transition hover:bg-[#e9edf2]"
           aria-label="비교함 비우기"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -44,7 +42,7 @@ export default function CompareBasket({
           type="button"
           onClick={() => setIsCompareModalOpen(true)}
           disabled={compareList.length < 2}
-          className="rounded-xl bg-indigo-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-indigo-200 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-full bg-[#3182f6] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2272eb] disabled:cursor-not-allowed disabled:bg-[#d1d6db]"
           aria-label={compareList.length < 2 ? "비교하려면 최소 2개를 담아주세요" : "비교 보기 열기"}
         >
           비교 보기

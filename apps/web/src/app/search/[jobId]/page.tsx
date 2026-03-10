@@ -16,11 +16,11 @@ const TIER_LABELS: Record<string, string> = {
 };
 
 const TIER_COLORS: Record<string, string> = {
-  S: "bg-emerald-400",
-  A: "bg-sky-400",
-  B: "bg-amber-400",
-  C: "bg-orange-400",
-  F: "bg-rose-400",
+  S: "bg-[#3182f6]",
+  A: "bg-[#5aa5ff]",
+  B: "bg-[#ffb020]",
+  C: "bg-[#ff8a3d]",
+  F: "bg-[#ff5f5f]",
 };
 
 export default function SearchResultsPage({
@@ -67,7 +67,7 @@ export default function SearchResultsPage({
   const isFailed = data?.status === "failed";
 
   return (
-    <main id="main-content" className="min-h-screen px-4 py-6 sm:px-6 sm:py-8">
+    <main id="main-content" className="min-h-screen px-5 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto w-full max-w-6xl">
         <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export default function SearchResultsPage({
               type="button"
               onClick={() => router.push("/")}
               aria-label="홈으로 돌아가기"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#4e5968] shadow-[0_8px_20px_rgba(15,23,42,0.06)] transition hover:bg-[#f8fafb]"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -83,27 +83,27 @@ export default function SearchResultsPage({
             </button>
 
             <div>
-              <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">검색 세션</p>
-              <h1 className="mt-1 text-2xl font-semibold text-white">리서치 결과</h1>
+              <p className="text-sm font-semibold text-[#8b95a1]">검색 결과</p>
+              <h1 className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-[#191f28]">리서치 결과</h1>
             </div>
           </div>
 
           {data?.query && (
-            <div className="inline-flex items-center gap-2 self-start rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-sm text-cyan-100">
-              <span className="text-cyan-300/80">질의</span>
-              <span className="font-medium text-white">{data.query}</span>
+            <div className="inline-flex items-center gap-2 self-start rounded-full bg-[#eef4ff] px-4 py-2 text-sm font-semibold text-[#3182f6]">
+              <span>질의</span>
+              <span className="text-[#191f28]">{data.query}</span>
             </div>
           )}
         </header>
 
         {(error || isFailed) && (
           <section className="mx-auto mt-12 max-w-2xl">
-            <div className="rounded-[28px] border border-red-500/20 bg-red-500/10 p-6 text-center">
-              <p className="text-sm text-red-100">{error || data?.error_message || "검색 중 오류가 발생했습니다."}</p>
+            <div className="rounded-[28px] border border-[#f1b7b4] bg-[#fff5f5] p-6 text-center">
+              <p className="text-sm text-[#b42318]">{error || data?.error_message || "검색 중 오류가 발생했습니다."}</p>
               <button
                 type="button"
                 onClick={() => router.push("/")}
-                className="mt-4 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
+                className="mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#4e5968] transition hover:bg-[#f8fafb]"
               >
                 다시 검색하기
               </button>
@@ -123,35 +123,35 @@ export default function SearchResultsPage({
           <>
             <section
               aria-labelledby="search-summary-title"
-              className="mb-8 rounded-[30px] border border-white/10 bg-[rgba(9,17,29,0.78)] p-6 shadow-[0_24px_72px_rgba(4,10,20,0.28)] backdrop-blur-xl sm:p-7"
+              className="mb-8 rounded-[32px] border border-[#e5e8eb] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:p-7"
             >
-              <div className="flex flex-col gap-3 border-b border-white/8 pb-5 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex flex-col gap-3 border-b border-[#eef1f4] pb-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">리서치 요약</p>
-                  <h2 id="search-summary-title" className="mt-2 text-2xl font-semibold text-white">
+                  <p className="text-sm font-semibold text-[#8b95a1]">요약</p>
+                  <h2 id="search-summary-title" className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-[#191f28]">
                     {data.query} 리서치 요약
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                  <p className="mt-3 text-sm leading-6 text-[#6b7684]">
                     광고 가능성 신호와 실사용 표현을 함께 읽어 상대적으로 참고할 만한 결과를 먼저 배치했습니다.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {data.summary?.overall_status === "HIGH_TRUST" && (
-                    <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-sm text-emerald-100">
+                    <span className="rounded-full bg-[#eef9f3] px-3 py-1 text-sm font-semibold text-[#1b7f5a]">
                       신뢰 근거가 비교적 잘 모였습니다
                     </span>
                   )}
                   {data.summary?.overall_status === "AD_DENSE" && (
-                    <span className="rounded-full border border-rose-300/20 bg-rose-300/10 px-3 py-1 text-sm text-rose-100">
+                    <span className="rounded-full bg-[#fff3f2] px-3 py-1 text-sm font-semibold text-[#d92d20]">
                       광고성 패턴 비중이 높습니다
                     </span>
                   )}
                   {data.summary?.overall_status === "CAUTION" && (
-                    <span className="rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-sm text-amber-100">
+                    <span className="rounded-full bg-[#fff8f0] px-3 py-1 text-sm font-semibold text-[#d66b00]">
                       원문 교차 확인이 필요합니다
                     </span>
                   )}
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-slate-200">
+                  <span className="rounded-full bg-[#f2f4f6] px-3 py-1 text-sm font-semibold text-[#4e5968]">
                     총 {data.summary?.total_results || 0}건
                   </span>
                 </div>
@@ -159,8 +159,8 @@ export default function SearchResultsPage({
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[1.25fr_0.95fr]">
                 <div className="grid gap-5 md:grid-cols-2">
-                  <section className="rounded-[24px] border border-emerald-400/10 bg-emerald-400/5 p-5">
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-emerald-100">
+                  <section className="rounded-[24px] bg-[#f6fbf8] p-5">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-[#1b7f5a]">
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
@@ -169,19 +169,19 @@ export default function SearchResultsPage({
                     <ul className="mt-3 space-y-2">
                       {data.summary?.pros && data.summary.pros.length > 0 ? (
                         data.summary.pros.map((item) => (
-                          <li key={item} className="flex items-start gap-2 text-sm leading-6 text-slate-200">
-                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-emerald-300" aria-hidden="true" />
+                          <li key={item} className="flex items-start gap-2 text-sm leading-6 text-[#333d4b]">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#1b7f5a]" aria-hidden="true" />
                             <span>{item}</span>
                           </li>
                         ))
                       ) : (
-                        <li className="text-sm text-slate-400">뾰족한 실사용 장점 신호는 아직 많지 않습니다.</li>
+                        <li className="text-sm text-[#8b95a1]">뾰족한 실사용 장점 신호는 아직 많지 않습니다.</li>
                       )}
                     </ul>
                   </section>
 
-                  <section className="rounded-[24px] border border-rose-400/10 bg-rose-400/5 p-5">
-                    <h3 className="flex items-center gap-2 text-sm font-semibold text-rose-100">
+                  <section className="rounded-[24px] bg-[#fff8f0] p-5">
+                    <h3 className="flex items-center gap-2 text-sm font-semibold text-[#d66b00]">
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path
                           strokeLinecap="round"
@@ -195,21 +195,21 @@ export default function SearchResultsPage({
                     <ul className="mt-3 space-y-2">
                       {data.summary?.cons && data.summary.cons.length > 0 ? (
                         data.summary.cons.map((item) => (
-                          <li key={item} className="flex items-start gap-2 text-sm leading-6 text-slate-200">
-                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-rose-300" aria-hidden="true" />
+                          <li key={item} className="flex items-start gap-2 text-sm leading-6 text-[#333d4b]">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#d66b00]" aria-hidden="true" />
                             <span>{item}</span>
                           </li>
                         ))
                       ) : (
-                        <li className="text-sm text-slate-400">반복적으로 포착된 단점 신호는 많지 않습니다.</li>
+                        <li className="text-sm text-[#8b95a1]">반복적으로 포착된 단점 신호는 많지 않습니다.</li>
                       )}
                     </ul>
                   </section>
                 </div>
 
-                <section className="rounded-[24px] border border-white/10 bg-slate-950/30 p-5">
-                  <h3 className="text-sm font-semibold text-white">신뢰 등급 분포</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">
+                <section className="rounded-[24px] bg-[#fafbfc] p-5">
+                  <h3 className="text-sm font-semibold text-[#191f28]">신뢰 등급 분포</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#6b7684]">
                     등급은 광고성 차감과 실사용 가점을 조합한 내부 산식 기준입니다. 원문 확인 전 최종 판단으로 사용하면 안 됩니다.
                   </p>
                   <div className="mt-5 space-y-3.5">
@@ -225,15 +225,15 @@ export default function SearchResultsPage({
 
                       return (
                         <div key={tier} className="grid grid-cols-[60px_88px_1fr_32px] items-center gap-3 text-sm">
-                          <span className="font-semibold text-slate-200">{tier}</span>
-                          <span className="text-xs text-slate-400">{TIER_LABELS[tier]}</span>
-                          <div className="h-2 rounded-full bg-white/8">
+                          <span className="font-semibold text-[#191f28]">{tier}</span>
+                          <span className="text-xs text-[#8b95a1]">{TIER_LABELS[tier]}</span>
+                          <div className="h-2 rounded-full bg-[#e5e8eb]">
                             <div
                               className={`h-2 rounded-full ${TIER_COLORS[tier]} transition-all duration-700`}
                               style={{ width: `${percentage}%` }}
                             />
                           </div>
-                          <span className="text-right text-slate-200">{count}</span>
+                          <span className="text-right text-[#4e5968]">{count}</span>
                         </div>
                       );
                     })}
@@ -245,12 +245,12 @@ export default function SearchResultsPage({
             {data.results.length > 0 ? (
               <ResultList results={data.results} platforms={data.summary?.platforms || []} />
             ) : (
-              <section className="rounded-[28px] border border-white/10 bg-white/5 p-8 text-center text-slate-300">
+              <section className="rounded-[28px] border border-[#e5e8eb] bg-white p-8 text-center text-[#6b7684]">
                 수집된 결과가 충분하지 않습니다. 검색어를 더 구체적으로 입력하거나 공개 URL 분석으로 다시 시도해보세요.
               </section>
             )}
 
-            <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-6 text-slate-400">
+            <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-6 text-[#8b95a1]">
               이 결과는 AI 기반 자동 수집 및 추정 결과이며 사실의 확정이 아닙니다. 구매 결정 전에는 원문과 판매 조건을 직접 확인하세요.
             </p>
           </>

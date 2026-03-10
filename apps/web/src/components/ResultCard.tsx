@@ -19,22 +19,22 @@ export default function ResultCard({ result, isComparing, onCompareToggle, disab
   const [feedbackState, setFeedbackState] = useState<"helpful" | "ad_suspected" | null>(null);
 
   const platformLabel = PLATFORM_LABELS[result.platform] || result.platform;
-  const platformColor = PLATFORM_COLORS[result.platform] || "#94a3b8";
+  const platformColor = PLATFORM_COLORS[result.platform] || "#8b95a1";
   const isVideo = result.media_types?.includes("video");
   const formattedPublishedAt = formatPublishedAt(result.published_at);
 
-  const getTierColor = (tier: string | undefined) => {
+  const getTierClassName = (tier: string | undefined) => {
     switch (tier) {
       case "S":
-        return "border-emerald-300/25 bg-emerald-300/10 text-emerald-100";
+        return "bg-[#eef9f3] text-[#1b7f5a]";
       case "A":
-        return "border-sky-300/25 bg-sky-300/10 text-sky-100";
+        return "bg-[#eef4ff] text-[#3182f6]";
       case "B":
-        return "border-amber-300/25 bg-amber-300/10 text-amber-100";
+        return "bg-[#fff8f0] text-[#d66b00]";
       case "F":
-        return "border-rose-300/25 bg-rose-300/10 text-rose-100";
+        return "bg-[#fff3f2] text-[#d92d20]";
       default:
-        return "border-orange-300/20 bg-orange-300/10 text-orange-100";
+        return "bg-[#f2f4f6] text-[#4e5968]";
     }
   };
 
@@ -54,67 +54,58 @@ export default function ResultCard({ result, isComparing, onCompareToggle, disab
 
   return (
     <>
-      <article className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[rgba(9,17,29,0.76)] p-5 shadow-[0_16px_48px_rgba(4,10,20,0.22)] backdrop-blur-xl transition hover:border-white/20 sm:p-6">
-        <div
-          className="absolute inset-y-0 left-0 w-1 rounded-l-[26px]"
-          style={{ backgroundColor: platformColor }}
-          aria-hidden="true"
-        />
+      <article className="overflow-hidden rounded-[28px] border border-[#e5e8eb] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)] sm:p-6">
+        <div className="flex flex-col gap-4 border-b border-[#f2f4f6] pb-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold"
+              style={{
+                color: platformColor,
+                backgroundColor: `${platformColor}12`,
+              }}
+            >
+              {isVideo ? "영상" : "문서"}
+              <span className="text-[#8b95a1]">/</span>
+              {platformLabel}
+            </span>
+            {formattedPublishedAt && <span className="text-xs text-[#8b95a1]">{formattedPublishedAt}</span>}
+          </div>
 
-        <div className="pl-2 sm:pl-3">
-          <div className="mb-4 flex flex-col gap-3 border-b border-white/8 pb-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium"
-                style={{
-                  color: platformColor,
-                  borderColor: `${platformColor}33`,
-                  backgroundColor: `${platformColor}14`,
-                }}
-              >
-                {isVideo ? "영상" : "문서"}
-                <span className="text-slate-100/70">/</span>
-                {platformLabel}
+          <div className="flex items-center gap-2 self-start">
+            {result.tier && (
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getTierClassName(result.tier)}`}>
+                등급 {result.tier} · TSS {result.tss ?? 0}
               </span>
-              {formattedPublishedAt && <span className="text-xs text-slate-400">{formattedPublishedAt}</span>}
-            </div>
-
-            <div className="flex items-center gap-2 self-start">
-              {result.tier && (
-                <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${getTierColor(result.tier)}`}>
-                  Tier {result.tier} / TSS {result.tss ?? 0}
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(true)}
-                aria-haspopup="dialog"
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-200 transition hover:border-cyan-300/30 hover:bg-cyan-300/10 hover:text-white"
-              >
-                자세히 보기
-              </button>
-            </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              aria-haspopup="dialog"
+              className="rounded-full bg-[#f2f4f6] px-3 py-1 text-xs font-semibold text-[#4e5968] transition hover:bg-[#e9edf2]"
+            >
+              자세히 보기
+            </button>
           </div>
-
-          <h3 className="text-lg font-semibold leading-7 text-white sm:text-xl">{result.title}</h3>
-
-          {result.author_name && <p className="mt-2 text-sm text-slate-400">{result.author_name}</p>}
-
-          {result.snippet && <p className="mt-4 line-clamp-3 text-sm leading-7 text-slate-200">{result.snippet}</p>}
-
-          <div className="mt-5">
-            <ResultSignalGroups result={result} compact />
-          </div>
-
-          <ResultCardActions
-            result={result}
-            feedbackState={feedbackState}
-            handleFeedback={handleFeedback}
-            isComparing={isComparing}
-            onCompareToggle={onCompareToggle}
-            disabledCompare={disabledCompare}
-          />
         </div>
+
+        <h3 className="mt-5 text-xl font-semibold leading-8 tracking-[-0.03em] text-[#191f28]">{result.title}</h3>
+
+        {result.author_name && <p className="mt-2 text-sm text-[#8b95a1]">{result.author_name}</p>}
+
+        {result.snippet && <p className="mt-4 text-sm leading-7 text-[#4e5968]">{result.snippet}</p>}
+
+        <div className="mt-5">
+          <ResultSignalGroups result={result} compact />
+        </div>
+
+        <ResultCardActions
+          result={result}
+          feedbackState={feedbackState}
+          handleFeedback={handleFeedback}
+          isComparing={isComparing}
+          onCompareToggle={onCompareToggle}
+          disabledCompare={disabledCompare}
+        />
       </article>
 
       <ResultDetailModal result={result} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />

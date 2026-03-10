@@ -17,13 +17,13 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#06111c",
-  colorScheme: "dark",
+  themeColor: "#f2f4f6",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className="dark">
+    <html lang="ko">
       <body className="min-h-screen overflow-x-hidden antialiased">
         <div className="relative flex min-h-screen flex-col">
           <a href="#main-content" className="skip-link">
@@ -31,11 +31,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </a>
 
           <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.14),transparent_36%),radial-gradient(circle_at_82%_18%,rgba(244,114,182,0.12),transparent_24%),linear-gradient(180deg,#07111d_0%,#020817_55%,#010409_100%)]" />
-            <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:72px_72px]" />
-            <div className="absolute left-[10%] top-24 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl" />
-            <div className="absolute right-[12%] top-32 h-56 w-56 rounded-full bg-fuchsia-400/10 blur-3xl" />
-            <div className="absolute bottom-[-4rem] left-1/3 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,#ffffff_0%,#f7f9fc_42%,#f2f4f6_100%)]" />
+            <div className="absolute left-[-8rem] top-[-6rem] h-72 w-72 rounded-full bg-[#dbeafe] blur-3xl" />
+            <div className="absolute right-[-6rem] top-20 h-80 w-80 rounded-full bg-[#e0ecff] blur-3xl" />
+            <div className="absolute bottom-[-8rem] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-[#eef4ff] blur-3xl" />
           </div>
 
           <div className="flex-1">{children}</div>
