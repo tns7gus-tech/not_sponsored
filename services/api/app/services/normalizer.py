@@ -61,6 +61,7 @@ def build_summary_from_models(results: list) -> dict:
         return {
             "total_results": 0,
             "platforms": [],
+            "platform_counts": {},
             "tier_distribution": {},
             "pros": [],
             "cons": [],
@@ -68,12 +69,15 @@ def build_summary_from_models(results: list) -> dict:
         }
 
     platforms = list(set(result.platform for result in results))
+    platform_counts: dict[str, int] = {}
     total_results = len(results)
     tier_distribution = {"S": 0, "A": 0, "B": 0, "C": 0, "F": 0}
     pros: list[str] = []
     cons: list[str] = []
 
     for result in results:
+        platform_counts[result.platform] = platform_counts.get(result.platform, 0) + 1
+
         if result.tier in tier_distribution:
             tier_distribution[result.tier] += 1
 
@@ -99,6 +103,7 @@ def build_summary_from_models(results: list) -> dict:
     return {
         "total_results": total_results,
         "platforms": platforms,
+        "platform_counts": platform_counts,
         "tier_distribution": tier_distribution,
         "pros": unique_pros,
         "cons": unique_cons,

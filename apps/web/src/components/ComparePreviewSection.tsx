@@ -1,20 +1,20 @@
 const SAVED_REPORTS = [
   {
-    title: "아이폰 17 후기",
+    title: "아이폰 17 실사용 후기",
     date: "2026-03-06",
-    summary: "발열 언급 증가, 배터리 평가는 엇갈림",
+    summary: "발열 언급 증가, 배터리 평가는 긍정적",
   },
   {
-    title: "아이폰 17 후기",
+    title: "아이폰 17 비교 후기",
     date: "2026-03-09",
-    summary: "카메라 저조도 언급 증가, 광고 링크 비중은 비슷함",
+    summary: "카메라 평가 증가, 광고 링크 비중은 낮음",
   },
 ];
 
 const COMPARE_BENEFITS = [
-  "같은 제품을 다른 시점에 다시 열어 변화한 장단점을 비교할 수 있습니다.",
-  "플랫폼별로 무엇이 반복되고 무엇이 과장되는지 저장해두고 교차 확인할 수 있습니다.",
-  "한 번 보고 끝나는 검색이 아니라, 구매 전 반복 리서치 흐름으로 이어집니다.",
+  "같은 제품의 다른 시점 결과를 다시 이어 보고 변화한 판단 요소를 비교할 수 있습니다.",
+  "플랫폼별로 무엇이 반복되고 무엇이 과장되는지 다시 확인할 수 있습니다.",
+  "한 번 보고 끝나는 검색이 아니라 구매 전 반복 리서치를 이어갈 수 있습니다.",
 ];
 
 export default function ComparePreviewSection() {
@@ -22,7 +22,7 @@ export default function ComparePreviewSection() {
     <section aria-labelledby="compare-preview-title" className="mx-auto mt-14 w-full max-w-6xl">
       <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="rounded-[28px] border border-white/10 bg-[rgba(9,17,29,0.76)] p-5 shadow-[0_16px_48px_rgba(4,10,20,0.22)] backdrop-blur-xl sm:p-6">
-          <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">저장한 리포트 비교 예시</p>
+          <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">비교 흐름 예시</p>
           <div className="mt-4 space-y-3">
             {SAVED_REPORTS.map((item) => (
               <article key={`${item.title}-${item.date}`} className="rounded-2xl border border-white/8 bg-white/5 p-4">
@@ -39,7 +39,7 @@ export default function ComparePreviewSection() {
             <h3 className="text-sm font-semibold text-cyan-100">비교하면 바로 보이는 변화</h3>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-200">
               <li>발열 언급: 이전보다 증가</li>
-              <li>카메라 저조도 언급: 최근 리뷰에서 새로 반복됨</li>
+              <li>카메라 야간 촬영: 최근 후기에서 반복</li>
               <li>광고 링크 비중: 큰 변화 없음</li>
             </ul>
           </div>
@@ -48,23 +48,11 @@ export default function ComparePreviewSection() {
         <div className="rounded-[28px] border border-white/10 bg-[rgba(9,17,29,0.76)] p-5 shadow-[0_16px_48px_rgba(4,10,20,0.22)] backdrop-blur-xl sm:p-6">
           <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">반복 사용 가치</p>
           <h2 id="compare-preview-title" className="mt-2 text-2xl font-semibold text-white">
-            저장하고, 비교하고, 다시 열람할 수 있어야 계속 쓰게 됩니다
+            보고 끝나는 검색보다 다시 보는 리서치가 더 중요합니다
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-300">
-            검색 결과를 한 번 보고 끝내지 않도록 저장과 비교 흐름을 홈에서도 보여줘야 합니다. 이 제품의 재방문 가치는
-            검색 결과를 쌓아놓고 다시 비교하는 데 있습니다.
+            구매 직전에는 한 번의 검색으로 끝나지 않습니다. 시간차 비교와 여러 번의 재확인이 실제 결정을 돕습니다.
           </p>
-
-          <div className="mt-5 flex flex-wrap gap-2">
-            {["저장하기", "비교에 추가", "다시 열람"].map((label) => (
-              <span
-                key={label}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
 
           <ul className="mt-6 space-y-3">
             {COMPARE_BENEFITS.map((item) => (

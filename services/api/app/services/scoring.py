@@ -45,7 +45,7 @@ def calculate_scores(signals: Iterable[Any]) -> Dict[str, Any]:
             if signal_type in HIGH_TRUST_REAL_USAGE_TYPES:
                 boost = int(10 * confidence)
                 trust_boost += boost
-                explanations.append(f"일반인 실사용 우선 신호 강화: '{matched_text}' (+{boost})")
+                explanations.append(f"직접 경험 우선 신호 강화: '{matched_text}' (+{boost})")
 
     crs = max(0, min(100, crs))
     eqs = max(0, min(100, eqs))
@@ -64,7 +64,7 @@ def calculate_scores(signals: Iterable[Any]) -> Dict[str, Any]:
         tier = "C"
 
     if crs == 100 and eqs == 0:
-        explanations.append("광고 신호도, 실사용 신호도 뚜렷하지 않은 중립 결과입니다.")
+        explanations.append("광고 신호와 실사용 신호가 모두 뚜렷하지 않은 중립 결과입니다.")
 
     return {
         "crs": crs,

@@ -7,10 +7,10 @@ interface Props {
 }
 
 const ANALYSIS_STEPS = [
-  { label: "공개 주소 확인", description: "로그인 필요 페이지나 내부망 주소인지 먼저 확인합니다." },
+  { label: "공개 주소 확인", description: "로그인 필요 페이지가 아닌지, 공개 페이지인지 먼저 확인합니다." },
   { label: "보안 경계 검사", description: "차단 대상 경로와 비표준 포트를 제외합니다." },
-  { label: "본문 추출", description: "비교 가능한 본문과 제목, 작성 시점 단서를 읽습니다." },
-  { label: "광고 신호 탐색", description: "협찬 문구와 링크 배치를 확인합니다." },
+  { label: "본문 추출", description: "비교 가능한 본문과 제목, 메타 설명을 추출합니다." },
+  { label: "광고성 신호 탐색", description: "제공 문구와 링크 유도 표현을 확인합니다." },
   { label: "카드 정리", description: "주의 신호와 근거를 카드 형태로 정리합니다." },
 ] as const;
 
@@ -38,7 +38,7 @@ export default function UrlAnalysisProgress({ url }: Props) {
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-[#6b7684]">단일 URL 분석</p>
+          <p className="text-sm font-semibold text-[#6b7684]">공개 URL 분석</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[#191f28]">공개 URL을 안전하게 읽고 있어요</h2>
         </div>
         <span className="self-start rounded-full bg-[#eef4ff] px-4 py-2 text-sm font-semibold text-[#3182f6]">
@@ -97,7 +97,7 @@ export default function UrlAnalysisProgress({ url }: Props) {
             style={{ width: `${Math.min(percentage, 92)}%` }}
           />
         </div>
-        <p className="mt-3 text-sm text-[#6b7684]">원문 전체를 복제하지 않고 요약 가능한 본문과 신호만 추출합니다.</p>
+        <p className="mt-3 text-sm text-[#6b7684]">본문 전체를 복제하지 않고 요약 가능한 본문과 신호만 추출합니다.</p>
       </div>
     </section>
   );

@@ -1,21 +1,19 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import ResultCard from "@/components/ResultCard";
 import UrlAnalysisProgress from "@/components/UrlAnalysisProgress";
 import { getUrlAnalysis, type UrlAnalysisJobDetail } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 
-export default function AnalyzeResultPage({
-  params,
-}: {
-  params: Promise<{ jobId: string }>;
-}) {
+export default function AnalyzeResultPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
   const router = useRouter();
   const [data, setData] = useState<UrlAnalysisJobDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const completedTrackedRef = useRef(false);
 
   const fetchResults = useCallback(async () => {
     try {
@@ -23,7 +21,7 @@ export default function AnalyzeResultPage({
       setData(result);
       return result.status;
     } catch {
-      setError("URL 분석 결과를 불러오는 데 실패했습니다.");
+      setError("URL 분석 결과를 불러오지 못했습니다.");
       return "failed";
     }
   }, [jobId]);
@@ -38,13 +36,26 @@ export default function AnalyzeResultPage({
       }
     };
 
-    poll();
+    void poll();
     return () => {
       if (timer) {
         clearTimeout(timer);
       }
     };
   }, [fetchResults]);
+
+  useEffect(() => {
+    if (data?.status === "completed" && !completedTrackedRef.current) {
+      completedTrackedRef.current = true;
+      void trackEvent("url_analysis_view", {
+        jobId,
+        details: {
+          url: data.url,
+          hasResult: Boolean(data.result),
+        },
+      });
+    }
+  }, [data, jobId]);
 
   const isAnalyzing = data?.status === "queued" || data?.status === "running";
   const isDone = data?.status === "completed";
@@ -89,7 +100,7 @@ export default function AnalyzeResultPage({
                 onClick={() => router.push("/")}
                 className="mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#4e5968] transition hover:bg-[#f8fafb]"
               >
-                돌아가기
+                홈으로 가기
               </button>
             </div>
           </section>
@@ -100,7 +111,7 @@ export default function AnalyzeResultPage({
         {isDone && data?.result && (
           <>
             <section className="mb-6 rounded-[28px] border border-[#e5e8eb] bg-white p-5 text-sm leading-6 text-[#6b7684] shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
-              단일 URL 분석은 해당 페이지 자체의 표현과 구조만 대상으로 합니다. 검색 결과 전체 합의도는 포함되지 않으며, 원문 확인이 필요합니다.
+              단일 URL 분석은 해당 페이지 자체의 표현과 구조를 보는 기능입니다. 검색 결과 전체 흐름을 대체하지 않으며 원문 확인은 여전히 중요합니다.
             </section>
             <ResultCard result={data.result} />
           </>
@@ -108,13 +119,13 @@ export default function AnalyzeResultPage({
 
         {isDone && !data?.result && !error && (
           <section className="rounded-[28px] border border-[#e5e8eb] bg-white p-8 text-center text-[#6b7684]">
-            분석은 완료됐지만 표시할 수 있는 결과가 아직 없습니다. 다른 공개 URL로 다시 시도해보세요.
+            분석은 완료됐지만 표시할 결과가 없습니다. 다른 공개 URL로 다시 시도해 보세요.
           </section>
         )}
 
         {isDone && (
           <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-6 text-[#8b95a1]">
-            이 분석 결과는 AI에 의한 자동 평가이며 사실 확정이 아닙니다. 법적 판단이나 단정적 낙인 용도로 사용하면 안 됩니다.
+            이 분석 결과는 자동 추정에 기반한 참고 자료입니다. 사실 확정이나 법적 판단 용도로 사용하지 마세요.
           </p>
         )}
       </div>

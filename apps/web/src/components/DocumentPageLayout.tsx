@@ -28,7 +28,6 @@ export default function DocumentPageLayout({ eyebrow, title, description, update
           <h1 className="mt-3 text-3xl font-semibold text-white sm:text-4xl">{title}</h1>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">{description}</p>
           <p className="mt-3 text-xs text-slate-500">업데이트: {updatedAt}</p>
-
           <div className="mt-8 space-y-6 text-sm leading-7 text-slate-200 sm:text-base">{children}</div>
         </section>
       </div>

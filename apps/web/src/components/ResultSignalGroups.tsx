@@ -11,11 +11,11 @@ const GROUP_META = [
   {
     key: "positive",
     title: "긍정 신호",
-    description: "실사용에 가까운 단서",
+    description: "실사용에 가까운 근거",
     containerClassName: "bg-[#f6fbf8]",
     titleClassName: "text-[#1b7f5a]",
     bulletClassName: "bg-[#1b7f5a]",
-    emptyCopy: "뚜렷한 긍정 신호는 아직 많지 않습니다.",
+    emptyCopy: "아직 강한 긍정 신호는 많지 않습니다.",
   },
   {
     key: "caution",
@@ -24,16 +24,16 @@ const GROUP_META = [
     containerClassName: "bg-[#fff8f0]",
     titleClassName: "text-[#d66b00]",
     bulletClassName: "bg-[#d66b00]",
-    emptyCopy: "눈에 띄는 주의 신호는 적습니다.",
+    emptyCopy: "뚜렷한 주의 신호는 적습니다.",
   },
   {
     key: "insufficient",
-    title: "데이터 부족",
+    title: "정보 부족",
     description: "추가 확인이 필요한 부분",
     containerClassName: "bg-[#f8fafb]",
     titleClassName: "text-[#4e5968]",
     bulletClassName: "bg-[#8b95a1]",
-    emptyCopy: "현재 카드에서는 부족한 데이터가 두드러지지 않습니다.",
+    emptyCopy: "현재 카드에서 부족한 정보는 많지 않습니다.",
   },
 ] as const;
 

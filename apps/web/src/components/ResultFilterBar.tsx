@@ -32,18 +32,18 @@ export default function ResultFilterBar({
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
           <p className="text-sm text-[#6b7684]">
-            총 <span className="font-semibold text-[#191f28]">{totalResults}개</span> 결과
+            현재 <span className="font-semibold text-[#191f28]">{totalResults}개</span> 결과
           </p>
 
           <label className="group inline-flex cursor-pointer items-center gap-3">
-            <span className="text-sm font-medium text-[#4e5968]">고신뢰 등급만 보기</span>
+            <span className="text-sm font-medium text-[#4e5968]">신뢰도가 높은 결과만 보기</span>
             <span className="relative inline-flex items-center">
               <input
                 type="checkbox"
                 className="peer sr-only"
                 checked={showHighTrustOnly}
-                onChange={(e) => setShowHighTrustOnly(e.target.checked)}
-                aria-label="고신뢰 등급 필터 켜기"
+                onChange={(event) => setShowHighTrustOnly(event.target.checked)}
+                aria-label="신뢰도가 높은 결과만 보기"
               />
               <span className="block h-6 w-11 rounded-full bg-[#d1d6db] transition peer-checked:bg-[#3182f6]" aria-hidden="true" />
               <span
@@ -61,7 +61,7 @@ export default function ResultFilterBar({
           <select
             id="sort-select"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as "relevance" | "trust")}
+            onChange={(event) => setSortBy(event.target.value as "relevance" | "trust")}
             className="min-h-11 rounded-full border border-[#e5e8eb] bg-[#fafbfc] px-4 py-2 pr-10 text-sm text-[#191f28] outline-none transition focus:border-[#3182f6] focus:ring-4 focus:ring-[#3182f61f]"
             style={{
               backgroundImage:
@@ -72,7 +72,7 @@ export default function ResultFilterBar({
             }}
           >
             <option value="trust">신뢰도 높은 순</option>
-            <option value="relevance">관련도 순</option>
+            <option value="relevance">기본 순서</option>
           </select>
         </div>
       </div>

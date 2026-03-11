@@ -1,19 +1,36 @@
 import type { Metadata, Viewport } from "next";
 
 import SiteFooter from "@/components/SiteFooter";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, getSiteUrl } from "@/lib/site";
 import "./globals.css";
 
+const siteUrl = getSiteUrl();
+
 export const metadata: Metadata = {
-  title: "Not Sponsored | 신뢰 기반 구매 리서치",
-  description: "광고 가능성과 실제 사용 근거를 분리해 보여주는 구매 리서치 에이전트",
-  applicationName: "Not Sponsored",
-  keywords: [
-    "구매 리서치",
-    "광고 판별",
-    "리뷰 신뢰도",
-    "NAVER 검색",
-    "YouTube 리뷰 분석",
-  ],
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: ["구매 리서치", "광고 아닌 후기", "실사용 후기", "내돈내산 검색", "리뷰 분석", "후기 비교"],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+    url: siteUrl,
+    siteName: SITE_NAME,
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {

@@ -13,7 +13,7 @@ function getApiBase(): string {
   return "http://localhost:8000";
 }
 
-const API_BASE = getApiBase();
+export const API_BASE = getApiBase();
 
 export interface SourceResult {
   id: string;
@@ -46,10 +46,20 @@ export interface SearchProgress {
 export interface SearchSummary {
   total_results: number;
   platforms: string[];
+  platform_counts?: Record<string, number>;
   tier_distribution?: Record<string, number>;
   pros?: string[];
   cons?: string[];
   overall_status?: string;
+}
+
+export interface SearchPagination {
+  page: number;
+  page_size: number;
+  total_results: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
 }
 
 export interface SearchJobDetail {
@@ -59,7 +69,18 @@ export interface SearchJobDetail {
   expanded_queries?: string[];
   progress?: SearchProgress;
   summary?: SearchSummary;
+  pagination?: SearchPagination;
   results: SourceResult[];
+  created_at?: string;
+  finished_at?: string;
+  error_message?: string;
+}
+
+export interface UrlAnalysisJobDetail {
+  job_id: string;
+  status: "queued" | "running" | "completed" | "failed";
+  url: string;
+  result?: SourceResult;
   created_at?: string;
   finished_at?: string;
   error_message?: string;
@@ -79,29 +100,45 @@ export async function createSearch(query: string): Promise<{ job_id: string; sta
   return res.json();
 }
 
-export async function getSearchResults(jobId: string, platform?: string): Promise<SearchJobDetail> {
+export async function getSearchResults(
+  jobId: string,
+  options?: {
+    platform?: string | null;
+    page?: number;
+    pageSize?: number;
+    sortBy?: "relevance" | "trust";
+    highTrustOnly?: boolean;
+  },
+): Promise<SearchJobDetail> {
   const params = new URLSearchParams();
-  if (platform) {
-    params.set("platform", platform);
+
+  if (options?.platform) {
+    params.set("platform", options.platform);
+  }
+
+  if (options?.page) {
+    params.set("page", String(options.page));
+  }
+
+  if (options?.pageSize) {
+    params.set("page_size", String(options.pageSize));
+  }
+
+  if (options?.sortBy) {
+    params.set("sort_by", options.sortBy);
+  }
+
+  if (options?.highTrustOnly) {
+    params.set("high_trust_only", "true");
   }
 
   const url = `${API_BASE}/api/search/${jobId}${params.toString() ? `?${params}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`결과 조회 실패: ${res.status}`);
+    throw new Error(`검색 결과 조회 실패: ${res.status}`);
   }
 
   return res.json();
-}
-
-export interface UrlAnalysisJobDetail {
-  job_id: string;
-  status: "queued" | "running" | "completed" | "failed";
-  url: string;
-  result?: SourceResult;
-  created_at?: string;
-  finished_at?: string;
-  error_message?: string;
 }
 
 export async function createUrlAnalysis(url: string): Promise<{ job_id: string; status: string }> {
@@ -119,8 +156,7 @@ export async function createUrlAnalysis(url: string): Promise<{ job_id: string; 
 }
 
 export async function getUrlAnalysis(jobId: string): Promise<UrlAnalysisJobDetail> {
-  const url = `${API_BASE}/api/analyze-url/${jobId}`;
-  const res = await fetch(url);
+  const res = await fetch(`${API_BASE}/api/analyze-url/${jobId}`);
   if (!res.ok) {
     throw new Error(`분석 결과 조회 실패: ${res.status}`);
   }
@@ -157,7 +193,7 @@ export const PLATFORM_LABELS: Record<string, string> = {
   naver_shopping: "네이버 쇼핑",
   youtube: "YouTube",
   web: "웹",
-  web_analysis: "웹페이지",
+  web_analysis: "웹 페이지",
 };
 
 export const PLATFORM_COLORS: Record<string, string> = {

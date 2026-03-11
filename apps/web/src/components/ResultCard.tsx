@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { PLATFORM_COLORS, PLATFORM_LABELS, submitFeedback, type SourceResult } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 import ResultCardActions from "./ResultCardActions";
 import ResultDetailModal from "./ResultDetailModal";
 import ResultSignalGroups from "./ResultSignalGroups";
@@ -47,9 +48,26 @@ export default function ResultCard({ result, isComparing, onCompareToggle, disab
     try {
       await submitFeedback(type, result.id, result.url);
       setFeedbackState(type);
+      void trackEvent("feedback_submit", {
+        details: {
+          feedbackType: type,
+          resultId: result.id,
+          platform: result.platform,
+        },
+      });
     } catch (error) {
       console.error("Failed to submit feedback:", error);
     }
+  };
+
+  const openDetail = () => {
+    setIsModalOpen(true);
+    void trackEvent("result_detail_open", {
+      details: {
+        resultId: result.id,
+        platform: result.platform,
+      },
+    });
   };
 
   return (
@@ -79,7 +97,7 @@ export default function ResultCard({ result, isComparing, onCompareToggle, disab
             )}
             <button
               type="button"
-              onClick={() => setIsModalOpen(true)}
+              onClick={openDetail}
               aria-haspopup="dialog"
               className="rounded-full bg-[#f2f4f6] px-3 py-1 text-xs font-semibold text-[#4e5968] transition hover:bg-[#e9edf2]"
             >
@@ -89,9 +107,7 @@ export default function ResultCard({ result, isComparing, onCompareToggle, disab
         </div>
 
         <h3 className="mt-5 text-xl font-semibold leading-8 tracking-[-0.03em] text-[#191f28]">{result.title}</h3>
-
         {result.author_name && <p className="mt-2 text-sm text-[#8b95a1]">{result.author_name}</p>}
-
         {result.snippet && <p className="mt-4 text-sm leading-7 text-[#4e5968]">{result.snippet}</p>}
 
         <div className="mt-5">

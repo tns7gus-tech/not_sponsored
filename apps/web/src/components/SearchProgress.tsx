@@ -12,12 +12,12 @@ interface Props {
 
 const SOURCES = ["NAVER 블로그", "NAVER 카페", "NAVER 뉴스", "NAVER 쇼핑", "YouTube"];
 const WORKFLOW_STEPS = [
-  { label: "검색어 확장", description: "입력한 검색어를 여러 질의로 나눕니다." },
-  { label: "네이버 수집", description: "블로그, 카페, 뉴스, 쇼핑 단서를 모읍니다." },
-  { label: "유튜브 수집", description: "영상 제목과 설명, 맥락을 확인합니다." },
-  { label: "광고 신호 분석", description: "제휴 링크와 과도한 CTA를 확인합니다." },
-  { label: "장단점 정리", description: "반복되는 장점과 단점을 묶습니다." },
-  { label: "리포트 정리", description: "근거와 주의 신호를 카드로 정리합니다." },
+  { label: "검색어 확장", description: "입력한 검색어를 후기, 비교, 단점 같은 하위 질의로 확장합니다." },
+  { label: "네이버 수집", description: "블로그, 카페, 뉴스, 쇼핑 결과를 모읍니다." },
+  { label: "유튜브 수집", description: "영상 제목과 설명, 채널 정보를 함께 확인합니다." },
+  { label: "광고성 신호 분석", description: "제휴 링크, 제공 표현, 반복 CTA를 점검합니다." },
+  { label: "판단 요소 정리", description: "반복되는 장점과 단점을 묶어 요약합니다." },
+  { label: "리포트 생성", description: "근거 신호와 주의 신호를 카드로 정리합니다." },
 ] as const;
 
 export default function SearchProgress({ query, expandedQueries, progress }: Props) {
@@ -38,7 +38,7 @@ export default function SearchProgress({ query, expandedQueries, progress }: Pro
               {query} 관련 결과를 정리하고 있어요
             </h2>
             <p className="mt-3 text-sm leading-6 text-[#6b7684]">
-              여러 소스에서 문장을 모으고, 광고성 신호와 실사용 표현을 함께 읽어 리포트로 묶는 과정입니다.
+              여러 소스에서 문장을 모으고 광고성 신호와 실사용 표현을 함께 보는 리포트로 묶는 과정입니다.
             </p>
           </div>
 
@@ -85,7 +85,7 @@ export default function SearchProgress({ query, expandedQueries, progress }: Pro
               {expandedQueries.slice(0, 10).map((item, index) => (
                 <span
                   key={item}
-                  className="animate-fade-in rounded-full bg-[#f2f4f6] px-3 py-1.5 text-xs text-[#4e5968]"
+                  className="rounded-full bg-[#f2f4f6] px-3 py-1.5 text-xs text-[#4e5968]"
                   style={{ animationDelay: `${index * 80}ms` }}
                 >
                   {item}
@@ -158,7 +158,7 @@ export default function SearchProgress({ query, expandedQueries, progress }: Pro
             </div>
             {progress && progress.results_collected > 0 && (
               <p className="mt-3 text-sm text-[#6b7684]">
-                후보 결과 <span className="font-semibold text-[#191f28]">{progress.results_collected}개</span>를 확보했습니다.
+                임시 결과 <span className="font-semibold text-[#191f28]">{progress.results_collected}개</span>를 모으고 있습니다.
               </p>
             )}
           </div>

@@ -1,14 +1,19 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 interface Props {
   onAnalyze: (url: string) => void;
   isLoading?: boolean;
+  initialValue?: string;
 }
 
-export default function UrlAnalyzerInput({ onAnalyze, isLoading }: Props) {
-  const [url, setUrl] = useState("");
+export default function UrlAnalyzerInput({ onAnalyze, isLoading, initialValue = "" }: Props) {
+  const [url, setUrl] = useState(initialValue);
+
+  useEffect(() => {
+    setUrl(initialValue);
+  }, [initialValue]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -26,7 +31,7 @@ export default function UrlAnalyzerInput({ onAnalyze, isLoading }: Props) {
             공개 URL 분석
           </label>
           <p id="url-help" className="text-sm text-slate-400">
-            로그인 필요 페이지, 내부망 주소, 비표준 포트 주소는 보안상 차단됩니다.
+            로그인 필요 페이지, 이메일 주소, 비표준 포트는 차단합니다.
           </p>
         </div>
 
@@ -50,7 +55,7 @@ export default function UrlAnalyzerInput({ onAnalyze, isLoading }: Props) {
                   type="url"
                   value={url}
                   onChange={(event) => setUrl(event.target.value)}
-                  placeholder="분석할 공개 페이지 URL을 붙여넣으세요"
+                  placeholder="분석할 공개 페이지 URL을 붙여 넣어 주세요"
                   aria-describedby="url-help"
                   enterKeyHint="go"
                   className="min-h-[56px] w-full bg-transparent text-base text-white outline-none placeholder:text-slate-500 sm:text-lg"
@@ -61,7 +66,7 @@ export default function UrlAnalyzerInput({ onAnalyze, isLoading }: Props) {
               <button
                 type="submit"
                 disabled={!url.trim() || isLoading}
-                aria-label={isLoading ? "URL 분석을 진행 중입니다" : "URL 분석 시작"}
+                aria-label={isLoading ? "URL 분석 진행 중" : "URL 분석 시작"}
                 className="min-h-[48px] rounded-[18px] bg-gradient-to-r from-fuchsia-300 to-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:from-fuchsia-200 hover:to-cyan-200 disabled:cursor-not-allowed disabled:opacity-35 sm:px-6"
               >
                 {isLoading ? (
@@ -82,7 +87,7 @@ export default function UrlAnalyzerInput({ onAnalyze, isLoading }: Props) {
       </form>
 
       <div className="mt-4 rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-300">
-        분석은 링크 한 건씩 수행되며, 원문 전체를 복제하지 않고 요약과 신호만 저장합니다.
+        본문 전체를 복제하지 않고 요약 가능한 본문과 신호만 사용합니다.
       </div>
     </div>
   );

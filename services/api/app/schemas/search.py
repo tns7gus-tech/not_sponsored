@@ -69,10 +69,22 @@ class SearchSummaryResponse(BaseModel):
 
     total_results: int = 0
     platforms: List[str] = Field(default_factory=list)
+    platform_counts: dict[str, int] = Field(default_factory=dict)
     tier_distribution: dict[str, int] = Field(default_factory=dict)
     pros: List[str] = Field(default_factory=list)
     cons: List[str] = Field(default_factory=list)
     overall_status: Optional[str] = None
+
+
+class SearchPaginationResponse(BaseModel):
+    """검색 결과 페이지네이션 메타데이터."""
+
+    page: int = 1
+    page_size: int = 10
+    total_results: int = 0
+    total_pages: int = 1
+    has_next: bool = False
+    has_prev: bool = False
 
 
 class SearchJobDetailResponse(BaseModel):
@@ -84,6 +96,7 @@ class SearchJobDetailResponse(BaseModel):
     expanded_queries: Optional[List[str]] = None
     progress: Optional[SearchProgressResponse] = None
     summary: Optional[SearchSummaryResponse] = None
+    pagination: Optional[SearchPaginationResponse] = None
     results: List[SourceResultResponse] = Field(default_factory=list)
     created_at: Optional[str] = None
     finished_at: Optional[str] = None

@@ -4,6 +4,7 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@
 import { Fragment } from "react";
 
 import { PLATFORM_COLORS, PLATFORM_LABELS, type SourceResult } from "@/lib/api";
+import { trackEvent } from "@/lib/analytics";
 import ResultSignalGroups from "./ResultSignalGroups";
 
 interface Props {
@@ -13,11 +14,11 @@ interface Props {
 }
 
 const TIER_COPY: Record<string, string> = {
-  S: "근거가 풍부한 편",
-  A: "비교적 참고 가능",
-  B: "근거가 혼합됨",
-  C: "추가 확인 필요",
-  F: "광고성 또는 근거 부족 주의",
+  S: "근거가 충분한 편입니다",
+  A: "비교 참고용으로 유용합니다",
+  B: "근거가 섞여 있습니다",
+  C: "추가 확인이 필요합니다",
+  F: "광고성 또는 근거 부족 신호를 주의하세요",
 };
 
 export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
@@ -51,11 +52,7 @@ export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
               leaveTo="translate-y-3 opacity-0 sm:translate-y-0 sm:scale-95"
             >
               <DialogPanel className="relative w-full max-w-4xl overflow-hidden rounded-[32px] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
-                <div
-                  className="absolute inset-x-0 top-0 h-1.5"
-                  style={{ backgroundColor: platformColor }}
-                  aria-hidden="true"
-                />
+                <div className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: platformColor }} aria-hidden="true" />
 
                 <div className="border-b border-[#eef1f4] px-5 py-4 sm:px-6">
                   <div className="flex items-start justify-between gap-4">
@@ -73,7 +70,7 @@ export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
                         상세 분석 결과
                       </DialogTitle>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b7684]">
-                        자동 추정 결과와 근거를 함께 보여줍니다. 최종 판단 전에는 원문과 작성 맥락을 직접 확인하세요.
+                        자동 추정 결과와 근거를 함께 보여줍니다. 최종 판단 전에는 원문과 작성 시점을 다시 확인해 주세요.
                       </p>
                     </div>
 
@@ -102,19 +99,19 @@ export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
 
                   <section className="mt-6 grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
                     <div className="rounded-[24px] bg-[#fafbfc] p-5">
-                      <p className="text-xs font-semibold tracking-[0.18em] text-[#8b95a1]">신뢰 점수</p>
+                      <p className="text-xs font-semibold tracking-[0.18em] text-[#8b95a1]">점수 요약</p>
                       <div className="mt-3 flex items-end gap-2">
                         <span className="text-4xl font-semibold tracking-[-0.04em] text-[#191f28]">{result.tss ?? 0}</span>
                         <span className="pb-1 text-sm text-[#8b95a1]">/ 100</span>
                       </div>
                       <p className="mt-2 text-sm text-[#6b7684]">
-                        {result.tier ? `등급 ${result.tier} · ${TIER_COPY[result.tier] || "추가 확인 필요"}` : "등급 데이터 없음"}
+                        {result.tier ? `등급 ${result.tier} · ${TIER_COPY[result.tier] || "추가 확인이 필요합니다"}` : "등급 정보 없음"}
                       </p>
 
                       <div className="mt-5 space-y-4">
                         <div>
                           <div className="mb-2 flex items-center justify-between text-sm">
-                            <span className="text-[#6b7684]">광고성 차감(CRS)</span>
+                            <span className="text-[#6b7684]">광고성 신호 (CRS)</span>
                             <span className="font-semibold text-[#191f28]">{result.crs ?? 0}</span>
                           </div>
                           <div className="h-2 rounded-full bg-[#e5e8eb]">
@@ -124,14 +121,11 @@ export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
 
                         <div>
                           <div className="mb-2 flex items-center justify-between text-sm">
-                            <span className="text-[#6b7684]">실사용 가점(EQS)</span>
+                            <span className="text-[#6b7684]">실사용 근거 (EQS)</span>
                             <span className="font-semibold text-[#191f28]">{result.eqs ?? 0}</span>
                           </div>
                           <div className="h-2 rounded-full bg-[#e5e8eb]">
-                            <div
-                              className="h-2 rounded-full bg-[#3182f6]"
-                              style={{ width: `${Math.min(result.eqs ?? 0, 100)}%` }}
-                            />
+                            <div className="h-2 rounded-full bg-[#3182f6]" style={{ width: `${Math.min(result.eqs ?? 0, 100)}%` }} />
                           </div>
                         </div>
                       </div>
@@ -145,7 +139,7 @@ export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
 
                 <div className="flex flex-col-reverse gap-3 border-t border-[#eef1f4] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                   <p className="text-xs leading-5 text-[#8b95a1]">
-                    원문 이동 전에도 제휴 링크나 광고 문구는 다시 직접 확인하는 것이 안전합니다.
+                    원문으로 이동하기 전에는 제휴 링크와 광고 문구가 다시 있는지 직접 확인하는 편이 안전합니다.
                   </p>
                   <div className="flex gap-2 self-end">
                     <button
@@ -159,6 +153,16 @@ export default function ResultDetailModal({ result, isOpen, onClose }: Props) {
                       href={result.url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => {
+                        void trackEvent("source_click", {
+                          details: {
+                            resultId: result.id,
+                            platform: result.platform,
+                            url: result.url,
+                            source: "detail_modal",
+                          },
+                        });
+                      }}
                       className="inline-flex items-center gap-2 rounded-full bg-[#3182f6] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2272eb]"
                     >
                       원문 열기

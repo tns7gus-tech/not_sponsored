@@ -1,17 +1,17 @@
 const FEATURE_CARDS = [
   {
-    title: "다중 소스 검색",
-    description: "제품명 하나로 네이버, 유튜브, 웹 페이지 단서를 묶어서 확인합니다.",
+    title: "여러 소스를 한 번에",
+    description: "상품명 하나로 네이버와 유튜브의 공개 결과를 묶어서 살펴볼 수 있습니다.",
     accent: "from-emerald-400/20 to-cyan-400/10",
   },
   {
-    title: "근거 기반 설명",
-    description: "점수만 주지 않고 어떤 표현이 신뢰도에 영향을 줬는지 함께 보여줍니다.",
+    title: "점수보다 근거를 먼저",
+    description: "숫자만 보여주지 않고 어떤 문장과 구조가 판단에 영향을 주는지 함께 설명합니다.",
     accent: "from-cyan-400/20 to-sky-400/10",
   },
   {
-    title: "안전한 분석 경계",
-    description: "공개 URL만 허용하고, 내부망·비표준 포트·민감정보는 기본 차단합니다.",
+    title: "보안 경계를 분명하게",
+    description: "공개 URL만 다루고 로그인 필요 페이지나 비공개 주소는 처음부터 차단합니다.",
     accent: "from-sky-400/20 to-indigo-400/10",
   },
 ];
@@ -23,12 +23,11 @@ export default function AppFeatures() {
         <div>
           <p className="text-xs font-semibold tracking-[0.24em] text-slate-400">서비스 원칙</p>
           <h2 id="features-title" className="mt-2 text-2xl font-semibold text-white">
-            이 서비스가 지키는 핵심 방향
+            이 프로젝트가 지키는 기준
           </h2>
         </div>
         <p className="max-w-xl text-sm leading-6 text-slate-300">
-          후기의 진위를 단정하지 않고, 공개 근거를 먼저 정리해 보여줍니다. 최종 판단은 사용자가 직접 원문과 맥락을 확인한 뒤
-          내릴 수 있어야 합니다.
+          광고 여부를 단정하는 도구가 아니라 공개 근거를 더 빨리 확인하도록 돕는 구매 리서치 보조 도구에 가깝습니다.
         </p>
       </div>
 

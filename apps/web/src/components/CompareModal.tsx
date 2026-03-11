@@ -55,7 +55,7 @@ export default function CompareModal({ isOpen, onClose, comparedItems }: Props) 
                     type="button"
                     onClick={onClose}
                     className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#f2f4f6] text-[#4e5968] transition hover:bg-[#e9edf2]"
-                    aria-label="비교 보기 닫기"
+                    aria-label="비교 모달 닫기"
                   >
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -93,24 +93,22 @@ export default function CompareModal({ isOpen, onClose, comparedItems }: Props) 
                           )}
                         </div>
 
-                        <h3 className="mt-4 text-lg font-semibold leading-7 tracking-[-0.02em] text-[#191f28]">
-                          {item.title}
-                        </h3>
+                        <h3 className="mt-4 text-lg font-semibold leading-7 tracking-[-0.02em] text-[#191f28]">{item.title}</h3>
                         {item.author_name && <p className="mt-2 text-sm text-[#8b95a1]">{item.author_name}</p>}
 
                         <div className="mt-5 rounded-[22px] bg-white p-4">
-                          <h4 className="text-xs font-semibold tracking-[0.18em] text-[#8b95a1]">핵심 수치</h4>
+                          <h4 className="text-xs font-semibold tracking-[0.18em] text-[#8b95a1]">점수 비교</h4>
                           <dl className="mt-3 space-y-2 text-sm">
                             <div className="flex items-center justify-between gap-3">
                               <dt className="text-[#6b7684]">총점 (TSS)</dt>
                               <dd className="font-semibold text-[#191f28]">{item.tss ?? "-"}</dd>
                             </div>
                             <div className="flex items-center justify-between gap-3">
-                              <dt className="text-[#6b7684]">광고성 차감 (CRS)</dt>
+                              <dt className="text-[#6b7684]">광고성 신호 (CRS)</dt>
                               <dd className="font-semibold text-[#191f28]">{item.crs ?? "-"}</dd>
                             </div>
                             <div className="flex items-center justify-between gap-3">
-                              <dt className="text-[#6b7684]">실사용 가점 (EQS)</dt>
+                              <dt className="text-[#6b7684]">실사용 근거 (EQS)</dt>
                               <dd className="font-semibold text-[#191f28]">{item.eqs ?? "-"}</dd>
                             </div>
                           </dl>

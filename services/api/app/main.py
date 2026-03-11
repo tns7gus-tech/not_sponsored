@@ -10,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 from app.config import settings
 from app.database import Base, engine
 from app.limiter import limiter
+from app.routes.analytics import router as analytics_router
 from app.routes.analyze import router as analyze_router
 from app.routes.feedback import router as feedback_router
 from app.routes.search import router as search_router
@@ -97,6 +98,7 @@ async def add_security_headers(request: Request, call_next):
 
 app.include_router(search_router)
 app.include_router(analyze_router)
+app.include_router(analytics_router)
 app.include_router(feedback_router)
 
 

@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +15,7 @@ from app.schemas.search import (
     EngagementData,
     SearchJobDetailResponse,
     SearchJobResponse,
+    SearchPaginationResponse,
     SearchProgressResponse,
     SearchRequest,
     SearchSummaryResponse,
@@ -27,24 +28,24 @@ logger = logging.getLogger(__name__)
 TRENDING_LIMIT = 6
 TRENDING_LOOKBACK_DAYS = 30
 ROTATING_FALLBACK_QUERIES = [
-    "러닝화 추천",
-    "노이즈 캔슬링 이어폰",
-    "가성비 태블릿",
+    "무선 이어폰 추천",
+    "게이밍 키보드 비교",
+    "가성비 태블릿 추천",
     "건성 피부 토너",
-    "무선 청소기",
+    "무선 청소기 추천",
     "블랙박스 비교",
     "캠핑 의자 추천",
-    "단백질 쉐이크",
+    "출산 준비 리스트",
     "초등학생 책가방",
     "공기청정기 필터",
     "커피머신 입문용",
-    "수분크림 추천",
-    "트레일 러닝화",
+    "서큘레이터 추천",
+    "헤어드라이어 추천",
     "게이밍 마우스",
-    "전기면도기 비교",
+    "가정용 제습기 비교",
     "고양이 자동급식기",
     "목 어깨 마사지기",
-    "홈카페 원두",
+    "휴대용 보조배터리",
 ]
 
 router = APIRouter(prefix="/api/search", tags=["search"])
@@ -118,18 +119,40 @@ async def get_trending_searches(db: AsyncSession = Depends(get_db)):
 async def get_search_results(
     job_id: str,
     platform: Optional[str] = None,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=50),
+    sort_by: str = Query(default="trust"),
+    high_trust_only: bool = Query(default=False),
     db: AsyncSession = Depends(get_db),
 ):
     job = await db.get(QueryJob, job_id)
     if not job:
         raise HTTPException(status_code=404, detail="검색 작업을 찾을 수 없습니다.")
 
-    query = select(SourceResult).where(SourceResult.query_job_id == job_id)
+    base_query = select(SourceResult).where(SourceResult.query_job_id == job_id)
     if platform:
-        query = query.where(SourceResult.platform == platform)
-    query = query.order_by(SourceResult.created_at)
+        base_query = base_query.where(SourceResult.platform == platform)
+    if high_trust_only:
+        base_query = base_query.where(SourceResult.tier.in_(["S", "A"]))
 
-    result = await db.execute(query)
+    count_query = select(func.count()).select_from(base_query.subquery())
+    filtered_total = int((await db.execute(count_query)).scalar() or 0)
+    total_pages = max(1, (filtered_total + page_size - 1) // page_size)
+    current_page = min(page, total_pages)
+    offset = (current_page - 1) * page_size
+
+    if sort_by == "relevance":
+        results_query = base_query.order_by(SourceResult.created_at, SourceResult.id)
+    else:
+        results_query = base_query.order_by(
+            SourceResult.tss.desc().nullslast(),
+            SourceResult.created_at,
+            SourceResult.id,
+        )
+
+    results_query = results_query.offset(offset).limit(page_size)
+
+    result = await db.execute(results_query)
     source_results = result.scalars().all()
 
     results_response = []
@@ -170,6 +193,7 @@ async def get_search_results(
         summary = SearchSummaryResponse(
             total_results=job.summary_json.get("total_results", 0),
             platforms=job.summary_json.get("platforms", []),
+            platform_counts=job.summary_json.get("platform_counts", {}),
             tier_distribution=job.summary_json.get("tier_distribution", {}),
             pros=job.summary_json.get("pros", []),
             cons=job.summary_json.get("cons", []),
@@ -178,10 +202,26 @@ async def get_search_results(
 
     progress = None
     if job.status == JobStatus.RUNNING.value:
+        collected_results = int(
+            (
+                await db.execute(
+                    select(func.count()).select_from(SourceResult).where(SourceResult.query_job_id == job_id)
+                )
+            ).scalar()
+            or 0
+        )
+        connectors_done = int(
+            (
+                await db.execute(
+                    select(func.count(func.distinct(SourceResult.platform))).where(SourceResult.query_job_id == job_id)
+                )
+            ).scalar()
+            or 0
+        )
         progress = SearchProgressResponse(
             connectors_total=5,
-            connectors_done=len({item.platform for item in source_results}),
-            results_collected=len(source_results),
+            connectors_done=connectors_done,
+            results_collected=collected_results,
         )
 
     return SearchJobDetailResponse(
@@ -191,6 +231,14 @@ async def get_search_results(
         expanded_queries=expanded_queries,
         progress=progress,
         summary=summary,
+        pagination=SearchPaginationResponse(
+            page=current_page,
+            page_size=page_size,
+            total_results=filtered_total,
+            total_pages=total_pages,
+            has_next=current_page < total_pages,
+            has_prev=current_page > 1,
+        ),
         results=results_response,
         created_at=job.created_at.isoformat() if job.created_at else None,
         finished_at=job.finished_at.isoformat() if job.finished_at else None,

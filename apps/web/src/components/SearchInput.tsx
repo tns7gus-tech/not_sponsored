@@ -1,19 +1,23 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 interface Props {
   onSearch: (query: string) => void;
   isLoading?: boolean;
+  initialValue?: string;
 }
 
-export default function SearchInput({ onSearch, isLoading }: Props) {
-  const [query, setQuery] = useState("");
+export default function SearchInput({ onSearch, isLoading, initialValue = "" }: Props) {
+  const [query, setQuery] = useState(initialValue);
+
+  useEffect(() => {
+    setQuery(initialValue);
+  }, [initialValue]);
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     const trimmed = query.trim();
-
     if (trimmed) {
       onSearch(trimmed);
     }
@@ -42,7 +46,7 @@ export default function SearchInput({ onSearch, isLoading }: Props) {
           type="text"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="제품명, 고민, 비교하고 싶은 질문을 입력하세요"
+          placeholder="상품명, 비교 질문, 단점이 궁금한 주제를 입력해 주세요"
           enterKeyHint="search"
           autoComplete="off"
           disabled={isLoading}
