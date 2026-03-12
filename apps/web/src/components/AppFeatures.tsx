@@ -21,12 +21,12 @@ export default function AppFeatures() {
     <section aria-labelledby="features-title" className="mx-auto mt-14 w-full max-w-6xl">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold tracking-[0.24em] text-slate-400">서비스 원칙</p>
+          <p className="text-xs font-semibold tracking-[0.24em] text-slate-200">서비스 원칙</p>
           <h2 id="features-title" className="mt-2 text-2xl font-semibold text-white">
             이 프로젝트가 지키는 기준
           </h2>
         </div>
-        <p className="max-w-xl text-sm leading-6 text-slate-300">
+        <p className="max-w-xl text-sm leading-6 text-slate-100">
           광고 여부를 단정하는 도구가 아니라 공개 근거를 더 빨리 확인하도록 돕는 구매 리서치 보조 도구에 가깝습니다.
         </p>
       </div>
@@ -39,7 +39,7 @@ export default function AppFeatures() {
           >
             <div className={`mb-4 h-10 rounded-2xl bg-gradient-to-r ${card.accent}`} aria-hidden="true" />
             <h3 className="text-lg font-semibold text-white">{card.title}</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-300">{card.description}</p>
+            <p className="mt-2 text-sm leading-6 text-slate-100">{card.description}</p>
           </article>
         ))}
       </div>

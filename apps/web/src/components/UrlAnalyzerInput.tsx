@@ -27,11 +27,11 @@ export default function UrlAnalyzerInput({ onAnalyze, isLoading, initialValue = 
     <div className="w-full">
       <form onSubmit={handleSubmit} className="relative" aria-labelledby="url-form-title">
         <div className="mb-3 flex flex-col gap-1">
-          <label id="url-form-title" htmlFor="analyze-url" className="text-sm font-medium text-slate-200">
+          <label id="url-form-title" htmlFor="analyze-url" className="text-sm font-medium text-white">
             공개 URL 분석
           </label>
-          <p id="url-help" className="text-sm text-slate-400">
-            로그인 필요 페이지, 이메일 주소, 비표준 포트는 차단합니다.
+          <p id="url-help" className="text-sm text-slate-100">
+            로그인 필요 페이지, 앱 전용 링크, 비표준 포트는 차단합니다.
           </p>
         </div>
 
@@ -40,7 +40,7 @@ export default function UrlAnalyzerInput({ onAnalyze, isLoading, initialValue = 
           <div className="relative rounded-[26px] border border-white/12 bg-slate-950/90 p-2 backdrop-blur-xl">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
-                <div className="text-slate-400" aria-hidden="true">
+                <div className="text-slate-200" aria-hidden="true">
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
@@ -55,10 +55,10 @@ export default function UrlAnalyzerInput({ onAnalyze, isLoading, initialValue = 
                   type="url"
                   value={url}
                   onChange={(event) => setUrl(event.target.value)}
-                  placeholder="분석할 공개 페이지 URL을 붙여 넣어 주세요"
+                  placeholder="예: 공개 리뷰, 블로그, 뉴스 페이지 URL"
                   aria-describedby="url-help"
                   enterKeyHint="go"
-                  className="min-h-[56px] w-full bg-transparent text-base text-white outline-none placeholder:text-slate-500 sm:text-lg"
+                  className="min-h-[56px] w-full bg-transparent text-base text-white outline-none placeholder:text-slate-300 sm:text-lg"
                   disabled={isLoading}
                 />
               </div>
@@ -86,8 +86,8 @@ export default function UrlAnalyzerInput({ onAnalyze, isLoading, initialValue = 
         </div>
       </form>
 
-      <div className="mt-4 rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-300">
-        본문 전체를 복제하지 않고 요약 가능한 본문과 신호만 사용합니다.
+      <div className="mt-4 rounded-2xl border border-white/8 bg-white/5 px-4 py-3 text-sm text-slate-100">
+        공개 HTML 페이지가 가장 잘 맞으며, 본문 전체를 복제하지 않고 요약 가능한 신호만 사용합니다.
       </div>
     </div>
   );

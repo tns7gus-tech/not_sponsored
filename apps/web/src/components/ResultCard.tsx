@@ -83,10 +83,10 @@ export default function ResultCard({ result, isComparing, onCompareToggle, disab
               }}
             >
               {isVideo ? "영상" : "문서"}
-              <span className="text-[#8b95a1]">/</span>
+              <span className="text-[#5b6675]">/</span>
               {platformLabel}
             </span>
-            {formattedPublishedAt && <span className="text-xs text-[#8b95a1]">{formattedPublishedAt}</span>}
+            {formattedPublishedAt && <span className="text-xs text-[#5b6675]">{formattedPublishedAt}</span>}
           </div>
 
           <div className="flex items-center gap-2 self-start">
@@ -107,8 +107,8 @@ export default function ResultCard({ result, isComparing, onCompareToggle, disab
         </div>
 
         <h3 className="mt-5 text-xl font-semibold leading-8 tracking-[-0.03em] text-[#191f28]">{result.title}</h3>
-        {result.author_name && <p className="mt-2 text-sm text-[#8b95a1]">{result.author_name}</p>}
-        {result.snippet && <p className="mt-4 text-sm leading-7 text-[#4e5968]">{result.snippet}</p>}
+        {result.author_name && <p className="mt-2 text-sm text-[#5b6675]">{result.author_name}</p>}
+        {result.snippet && <p className="mt-4 text-sm leading-7 text-[#334155]">{result.snippet}</p>}
 
         <div className="mt-5">
           <ResultSignalGroups result={result} compact />

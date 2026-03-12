@@ -1,4 +1,5 @@
 export interface ResultFilterBarProps {
+  visibleResults: number;
   totalResults: number;
   showHighTrustOnly: boolean;
   setShowHighTrustOnly: (val: boolean) => void;
@@ -9,9 +10,12 @@ export interface ResultFilterBarProps {
   setSelectedPlatform: (val: string | null) => void;
   platformLabels: Record<string, string>;
   getPlatformCount: (p: string) => number;
+  hasActiveControls: boolean;
+  onResetControls: () => void;
 }
 
 export default function ResultFilterBar({
+  visibleResults,
   totalResults,
   showHighTrustOnly,
   setShowHighTrustOnly,
@@ -22,6 +26,8 @@ export default function ResultFilterBar({
   setSelectedPlatform,
   platformLabels,
   getPlatformCount,
+  hasActiveControls,
+  onResetControls,
 }: ResultFilterBarProps) {
   return (
     <section aria-labelledby="filter-section-title" className="mb-6 rounded-[28px] border border-[#e5e8eb] bg-white p-5 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
@@ -32,7 +38,15 @@ export default function ResultFilterBar({
       <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
           <p className="text-sm text-[#6b7684]">
-            현재 <span className="font-semibold text-[#191f28]">{totalResults}개</span> 결과
+            {hasActiveControls ? (
+              <>
+                현재 <span className="font-semibold text-[#191f28]">{visibleResults}개</span> / 전체 {totalResults}개 결과
+              </>
+            ) : (
+              <>
+                전체 <span className="font-semibold text-[#191f28]">{totalResults}개</span> 결과
+              </>
+            )}
           </p>
 
           <label className="group inline-flex cursor-pointer items-center gap-3">
@@ -55,6 +69,15 @@ export default function ResultFilterBar({
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {hasActiveControls && (
+            <button
+              type="button"
+              onClick={onResetControls}
+              className="min-h-11 rounded-full border border-[#e5e8eb] bg-white px-4 py-2 text-sm font-semibold text-[#4e5968] transition hover:bg-[#fafbfc]"
+            >
+              보기 초기화
+            </button>
+          )}
           <label htmlFor="sort-select" className="text-sm text-[#6b7684]">
             정렬 기준
           </label>

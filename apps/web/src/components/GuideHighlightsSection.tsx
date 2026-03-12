@@ -7,12 +7,15 @@ export default function GuideHighlightsSection() {
     <section aria-labelledby="guide-highlights-title" className="mx-auto mt-14 w-full max-w-6xl">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">공개 가이드</p>
+          <p className="text-xs font-semibold tracking-[0.22em] text-slate-200">공개 가이드</p>
           <h2 id="guide-highlights-title" className="mt-2 text-2xl font-semibold text-white">
             검색 유입을 위한 공개 콘텐츠
           </h2>
         </div>
-        <Link href="/guides" className="text-sm font-semibold text-cyan-200 transition hover:text-white">
+        <Link
+          href="/guides"
+          className="text-sm font-semibold text-cyan-100 transition hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
+        >
           전체 가이드 보기
         </Link>
       </div>
@@ -25,20 +28,20 @@ export default function GuideHighlightsSection() {
           >
             <div className="flex flex-wrap gap-2">
               {guide.tags.map((tag) => (
-                <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
+                <span key={tag} className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-xs text-white">
                   {tag}
                 </span>
               ))}
             </div>
             <h3 className="mt-4 text-xl font-semibold text-white">{guide.title}</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-300">{guide.excerpt}</p>
-            <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+            <p className="mt-3 text-sm leading-6 text-slate-100">{guide.excerpt}</p>
+            <div className="mt-4 flex items-center justify-between text-xs text-slate-200">
               <span>{guide.readTime}</span>
               <span>{guide.updatedAt}</span>
             </div>
             <Link
               href={`/guides/${guide.slug}`}
-              className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100"
+              className="mt-5 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
             >
               가이드 읽기
             </Link>

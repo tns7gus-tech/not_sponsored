@@ -14,9 +14,15 @@ import SupportScopeSection from "@/components/SupportScopeSection";
 import TrendingSearches from "@/components/TrendingSearches";
 import UrlAnalyzerInput from "@/components/UrlAnalyzerInput";
 import { trackEvent } from "@/lib/analytics";
-import { createSearch, createUrlAnalysis } from "@/lib/api";
+import { createSearch, createUrlAnalysis, getApiErrorMessage, isApiError } from "@/lib/api";
 
 const HISTORY_KEY = "not_sponsored_history";
+
+interface HomeErrorState {
+  title: string;
+  message: string;
+  hint: string;
+}
 
 export default function HomePage() {
   return (
@@ -34,7 +40,7 @@ function HomePageContent() {
 
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [isUrlLoading, setIsUrlLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<HomeErrorState | null>(null);
 
   useEffect(() => {
     void trackEvent("page_view_home", {
@@ -78,8 +84,8 @@ function HomePageContent() {
       const { job_id } = await createSearch(query);
       storeHistory(query, job_id);
       router.push(`/search/${job_id}`);
-    } catch {
-      setError("검색을 시작하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    } catch (caughtError) {
+      setError(buildHomeErrorState(caughtError, "search"));
       setIsSearchLoading(false);
     }
   };
@@ -97,8 +103,8 @@ function HomePageContent() {
     try {
       const { job_id } = await createUrlAnalysis(url);
       router.push(`/analyze/${job_id}`);
-    } catch {
-      setError("URL 분석을 시작하지 못했습니다. 공개 URL인지 다시 확인해 주세요.");
+    } catch (caughtError) {
+      setError(buildHomeErrorState(caughtError, "url"));
       setIsUrlLoading(false);
     }
   };
@@ -131,21 +137,21 @@ function HomePageContent() {
                   N
                 </span>
                 <span>
-                  <span className="block text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Not Sponsored</span>
-                  <span className="block text-sm text-slate-300">광고 문구보다 근거를 먼저 보여주는 구매 리서치</span>
+                  <span className="block text-xs font-semibold uppercase tracking-[0.28em] text-slate-200">Not Sponsored</span>
+                  <span className="block text-sm text-slate-100">광고 문구보다 근거를 먼저 보여주는 구매 리서치</span>
                 </span>
               </Link>
 
               <nav className="flex flex-wrap gap-2">
                 <Link
                   href="/guides"
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-cyan-300/10"
+                  className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/30 hover:bg-cyan-300/12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
                 >
                   공개 가이드
                 </Link>
                 <Link
                   href="/terms"
-                  className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-slate-100 transition hover:border-cyan-300/30 hover:bg-cyan-300/10"
+                  className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/30 hover:bg-cyan-300/12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
                 >
                   이용 안내
                 </Link>
@@ -163,13 +169,13 @@ function HomePageContent() {
                     실사용 근거를 먼저 보게 만듭니다
                   </span>
                 </h1>
-                <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+                <p className="mt-5 max-w-2xl text-base leading-8 text-slate-100 sm:text-lg">
                   네이버, 유튜브, 공개 URL에서 광고성 표현과 실제 사용 정황을 함께 모아 한 화면에서 정리합니다.
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-2.5">
                   {["실사용 후기 정리", "광고성 신호 표시", "공개 URL 직접 분석", "결과 비교와 재방문 흐름"].map((item) => (
-                    <span key={item} className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200">
+                    <span key={item} className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm text-white">
                       {item}
                     </span>
                   ))}
@@ -179,7 +185,7 @@ function HomePageContent() {
               <div className="rounded-[30px] border border-white/10 bg-white/5 p-4 backdrop-blur sm:p-5">
                 <div className="rounded-[26px] border border-white/10 bg-[rgba(7,14,26,0.78)] p-4 sm:p-5">
                   <h2 className="text-lg font-semibold text-white">바로 시작하기</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                  <p className="mt-2 text-sm leading-6 text-slate-100">
                     상품명으로 전체 리서치를 시작하거나 리뷰 페이지 URL 한 건을 직접 분석할 수 있습니다.
                   </p>
 
@@ -194,9 +200,11 @@ function HomePageContent() {
                   {error && (
                     <div
                       role="alert"
-                      className="mt-5 rounded-[20px] border border-[#f1b7b4] bg-[#fff5f5] px-4 py-3 text-sm text-[#b42318]"
+                      className="mt-5 rounded-[20px] border border-[#f1b7b4] bg-[#fff5f5] px-4 py-4 text-sm text-[#b42318]"
                     >
-                      {error}
+                      <p className="font-semibold">{error.title}</p>
+                      <p className="mt-1 leading-6">{error.message}</p>
+                      <p className="mt-2 text-[#912018]">{error.hint}</p>
                     </div>
                   )}
                 </div>
@@ -261,4 +269,55 @@ function safeHostname(url: string) {
   } catch {
     return undefined;
   }
+}
+
+function buildHomeErrorState(error: unknown, surface: "search" | "url"): HomeErrorState {
+  const message = getApiErrorMessage(
+    error,
+    surface === "search" ? "검색을 시작하지 못했습니다." : "URL 분석을 시작하지 못했습니다.",
+  );
+  const status = isApiError(error) ? error.status : undefined;
+
+  if (status === 429) {
+    return {
+      title: "요청이 잠시 많습니다",
+      message: "같은 시점에 요청이 몰려 잠시 제한되었습니다.",
+      hint: "잠시 후 다시 시도해 주세요.",
+    };
+  }
+
+  if (surface === "search") {
+    if (status === 422 || message.includes("검색어")) {
+      return {
+        title: "검색어를 다시 확인해 주세요",
+        message,
+        hint: "브랜드명, 모델명, 비교 기준을 함께 넣으면 결과가 더 안정적입니다.",
+      };
+    }
+
+    return {
+      title: "검색을 시작하지 못했습니다",
+      message,
+      hint: "잠시 후 다시 시도하거나 검색어를 더 구체적으로 바꿔 보세요.",
+    };
+  }
+
+  if (
+    message.includes("공개 웹 주소") ||
+    message.includes("사설망") ||
+    message.includes("http 또는 https") ||
+    message.includes("표준 웹 포트")
+  ) {
+    return {
+      title: "공개 URL만 분석할 수 있습니다",
+      message,
+      hint: "로그인 필요 페이지, 내부망 주소, 앱 전용 링크는 제외됩니다.",
+    };
+  }
+
+  return {
+    title: "URL 분석을 시작하지 못했습니다",
+    message,
+    hint: "블로그, 뉴스, 리뷰처럼 브라우저에서 열리는 공개 HTML 페이지가 가장 잘 맞습니다.",
+  };
 }

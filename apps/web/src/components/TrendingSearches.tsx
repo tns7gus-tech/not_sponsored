@@ -34,12 +34,12 @@ export default function TrendingSearches({ onSelect }: Props) {
     <section aria-labelledby="trending-searches-title" className="w-full">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">지금 많이 찾는 주제</p>
+          <p className="text-xs font-semibold tracking-[0.22em] text-slate-200">지금 많이 찾는 주제</p>
           <h2 id="trending-searches-title" className="mt-1 text-lg font-semibold text-white">
             바로 눌러서 리서치를 시작해 보세요
           </h2>
         </div>
-        <p className="text-sm text-slate-400">최근 검색과 공개 추천 주제를 묶어서 보여줍니다.</p>
+        <p className="text-sm text-slate-100">최근 검색과 공개 추천 주제를 묶어서 보여줍니다.</p>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2.5">
@@ -48,7 +48,7 @@ export default function TrendingSearches({ onSelect }: Props) {
             key={query}
             type="button"
             onClick={() => onSelect(query)}
-            className="rounded-full border border-white/12 bg-white/6 px-4 py-2 text-sm text-slate-100 transition hover:border-cyan-300/30 hover:bg-cyan-300/10"
+            className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-medium text-white transition hover:border-cyan-300/30 hover:bg-cyan-300/12 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
           >
             {query}
           </button>

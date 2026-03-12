@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 import ResultList from "@/components/ResultList";
 import SearchProgress from "@/components/SearchProgress";
-import { getSearchResults, type SearchJobDetail } from "@/lib/api";
+import { getApiErrorMessage, getSearchResults, isApiError, type SearchJobDetail } from "@/lib/api";
 import { trackEvent } from "@/lib/analytics";
 
 const TIER_LABELS: Record<string, string> = {
@@ -24,20 +24,29 @@ const TIER_COLORS: Record<string, string> = {
   F: "bg-[#ff5f5f]",
 };
 
+interface ErrorInfo {
+  message: string;
+  status?: number;
+}
+
 export default function SearchResultsPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
   const router = useRouter();
   const [data, setData] = useState<SearchJobDetail | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorInfo | null>(null);
   const completedTrackedRef = useRef(false);
 
   const fetchResults = useCallback(async () => {
     try {
       const result = await getSearchResults(jobId);
       setData(result);
+      setError(null);
       return result.status;
-    } catch {
-      setError("검색 결과를 불러오지 못했습니다.");
+    } catch (caughtError) {
+      setError({
+        message: getApiErrorMessage(caughtError, "검색 결과를 불러오지 못했습니다."),
+        status: isApiError(caughtError) ? caughtError.status : undefined,
+      });
       return "failed";
     }
   }, [jobId]);
@@ -77,6 +86,9 @@ export default function SearchResultsPage({ params }: { params: Promise<{ jobId:
   const isSearching = data?.status === "queued" || data?.status === "running";
   const isDone = data?.status === "completed";
   const isFailed = data?.status === "failed";
+  const totalResults = data?.summary?.total_results ?? 0;
+  const hasSparseResults = isDone && totalResults > 0 && totalResults < 4;
+  const errorState = getSearchErrorState(error, data?.error_message, data?.query);
 
   return (
     <main id="main-content" className="min-h-screen px-5 py-8 sm:px-6 sm:py-10">
@@ -108,17 +120,37 @@ export default function SearchResultsPage({ params }: { params: Promise<{ jobId:
           )}
         </header>
 
-        {(error || isFailed) && (
+        {(error || isFailed) && errorState && (
           <section className="mx-auto mt-12 max-w-2xl">
-            <div className="rounded-[28px] border border-[#f1b7b4] bg-[#fff5f5] p-6 text-center">
-              <p className="text-sm text-[#b42318]">{error || data?.error_message || "검색 중 오류가 발생했습니다."}</p>
-              <button
-                type="button"
-                onClick={() => router.push("/")}
-                className="mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#4e5968] transition hover:bg-[#f8fafb]"
-              >
-                다시 검색하기
-              </button>
+            <div className="rounded-[28px] border border-[#f1b7b4] bg-[#fff5f5] p-6">
+              <p className="text-sm font-semibold text-[#912018]">{errorState.title}</p>
+              <p className="mt-2 text-sm leading-6 text-[#b42318]">{errorState.message}</p>
+              <ul className="mt-4 space-y-2 text-sm leading-6 text-[#912018]">
+                {errorState.hints.map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#d92d20]" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => router.push(errorState.primaryAction.href)}
+                  className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#4e5968] transition hover:bg-[#f8fafb]"
+                >
+                  {errorState.primaryAction.label}
+                </button>
+                {errorState.secondaryAction && (
+                  <button
+                    type="button"
+                    onClick={() => router.push(errorState.secondaryAction.href)}
+                    className="rounded-full border border-[#e5e8eb] bg-transparent px-4 py-2 text-sm font-semibold text-[#912018] transition hover:bg-white/60"
+                  >
+                    {errorState.secondaryAction.label}
+                  </button>
+                )}
+              </div>
             </div>
           </section>
         )}
@@ -246,11 +278,44 @@ export default function SearchResultsPage({ params }: { params: Promise<{ jobId:
               </div>
             </section>
 
+            {hasSparseResults && (
+              <section className="mb-6 rounded-[28px] border border-[#ffe2b8] bg-[#fff8f0] p-5 text-sm leading-6 text-[#8a4b00] shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+                <p className="font-semibold">이번 검색은 공개 근거 수가 적습니다</p>
+                <p className="mt-2">
+                  브랜드명, 모델명, 사용 기간, 비교 대상 같은 단서를 더 넣으면 반복되는 실사용 신호를 더 잘 모을 수 있습니다.
+                </p>
+              </section>
+            )}
+
             {data.results.length > 0 ? (
               <ResultList results={data.results} platforms={data.summary?.platforms || []} />
             ) : (
-              <section className="rounded-[28px] border border-[#e5e8eb] bg-white p-8 text-center text-[#6b7684]">
-                수집된 결과가 충분하지 않습니다. 검색어를 더 구체적으로 입력하거나 공개 URL 분석으로 다시 시도해 보세요.
+              <section className="rounded-[28px] border border-[#e5e8eb] bg-white p-8 text-center">
+                <h3 className="text-lg font-semibold text-[#191f28]">수집된 결과가 충분하지 않습니다</h3>
+                <p className="mt-2 text-sm leading-6 text-[#6b7684]">
+                  검색어가 너무 넓거나 공개된 후기 데이터가 적을 수 있습니다. 다음 중 하나로 다시 시도해 보세요.
+                </p>
+                <ul className="mt-5 space-y-2 text-sm leading-6 text-[#4e5968]">
+                  <li>브랜드명과 모델명을 함께 넣기</li>
+                  <li>배터리, 발열, 내구성처럼 궁금한 기준 추가하기</li>
+                  <li>특정 리뷰 페이지가 있다면 공개 URL 분석으로 바로 보기</li>
+                </ul>
+                <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/?q=${encodeURIComponent(data.query)}`)}
+                    className="rounded-full bg-[#191f28] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2b3441]"
+                  >
+                    검색어 바꿔 다시 찾기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/?source=search-empty&q=${encodeURIComponent(data.query)}`)}
+                    className="rounded-full border border-[#e5e8eb] bg-white px-5 py-2.5 text-sm font-semibold text-[#4e5968] transition hover:bg-[#fafbfc]"
+                  >
+                    홈으로 돌아가기
+                  </button>
+                </div>
               </section>
             )}
 
@@ -262,4 +327,42 @@ export default function SearchResultsPage({ params }: { params: Promise<{ jobId:
       </div>
     </main>
   );
+}
+
+function getSearchErrorState(error: ErrorInfo | null, backendMessage?: string, query?: string) {
+  const message = backendMessage || error?.message || "검색 중 오류가 발생했습니다.";
+  const primaryHref = query ? `/?q=${encodeURIComponent(query)}` : "/";
+  const primaryLabel = query ? "같은 검색어로 다시 시작" : "홈으로 돌아가기";
+
+  if (error?.status === 404 || message.includes("찾을 수 없습니다")) {
+    return {
+      title: "검색 작업을 찾지 못했습니다",
+      message: "링크가 만료되었거나 아직 생성되지 않은 작업일 수 있습니다.",
+      hints: [
+        "홈에서 검색을 다시 시작해 새 작업을 생성해 주세요.",
+        "북마크한 오래된 링크라면 최신 결과를 다시 만드는 편이 안전합니다.",
+      ],
+      primaryAction: { label: primaryLabel, href: primaryHref },
+    };
+  }
+
+  if (error?.status === 429) {
+    return {
+      title: "요청이 잠시 많습니다",
+      message: "같은 시점에 요청이 몰려 결과 조회가 잠시 제한되었습니다.",
+      hints: ["잠시 후 다시 시도하면 대부분 해소됩니다.", "반복 새로고침 대신 잠시 기다린 뒤 홈에서 다시 시작해 주세요."],
+      primaryAction: { label: "홈으로 돌아가기", href: "/" },
+    };
+  }
+
+  return {
+    title: "검색 결과를 만들지 못했습니다",
+    message,
+    hints: [
+      "네트워크 지연이나 외부 소스 응답 문제로 작업이 중단됐을 수 있습니다.",
+      "검색어를 조금 더 구체적으로 바꾸면 결과가 안정적으로 모일 수 있습니다.",
+    ],
+    primaryAction: { label: primaryLabel, href: primaryHref },
+    secondaryAction: { label: "홈으로 돌아가기", href: "/" },
+  };
 }

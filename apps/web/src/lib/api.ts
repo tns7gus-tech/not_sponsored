@@ -15,6 +15,18 @@ function getApiBase(): string {
 
 export const API_BASE = getApiBase();
 
+export class ApiError extends Error {
+  status: number;
+  detail?: string;
+
+  constructor(status: number, message: string, detail?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 export interface SourceResult {
   id: string;
   platform: string;
@@ -94,7 +106,7 @@ export async function createSearch(query: string): Promise<{ job_id: string; sta
   });
 
   if (!res.ok) {
-    throw new Error(`검색 요청 실패: ${res.status}`);
+    await throwApiError(res, "검색 요청을 처리하지 못했습니다.");
   }
 
   return res.json();
@@ -135,7 +147,7 @@ export async function getSearchResults(
   const url = `${API_BASE}/api/search/${jobId}${params.toString() ? `?${params}` : ""}`;
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`검색 결과 조회 실패: ${res.status}`);
+    await throwApiError(res, "검색 결과를 불러오지 못했습니다.");
   }
 
   return res.json();
@@ -149,7 +161,7 @@ export async function createUrlAnalysis(url: string): Promise<{ job_id: string; 
   });
 
   if (!res.ok) {
-    throw new Error(`URL 분석 요청 실패: ${res.status}`);
+    await throwApiError(res, "URL 분석 요청을 처리하지 못했습니다.");
   }
 
   return res.json();
@@ -158,7 +170,7 @@ export async function createUrlAnalysis(url: string): Promise<{ job_id: string; 
 export async function getUrlAnalysis(jobId: string): Promise<UrlAnalysisJobDetail> {
   const res = await fetch(`${API_BASE}/api/analyze-url/${jobId}`);
   if (!res.ok) {
-    throw new Error(`분석 결과 조회 실패: ${res.status}`);
+    await throwApiError(res, "URL 분석 결과를 불러오지 못했습니다.");
   }
 
   return res.json();
@@ -180,7 +192,7 @@ export async function submitFeedback(
   });
 
   if (!res.ok) {
-    throw new Error(`피드백 제출 실패: ${res.status}`);
+    await throwApiError(res, "피드백을 제출하지 못했습니다.");
   }
 
   return res.json();
@@ -213,7 +225,7 @@ export async function getTrendingSearches(): Promise<string[]> {
     });
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch trending searches: ${res.status}`);
+      await throwApiError(res, "추천 검색어를 불러오지 못했습니다.");
     }
 
     return res.json();
@@ -221,4 +233,62 @@ export async function getTrendingSearches(): Promise<string[]> {
     console.warn("Failed to fetch trending searches. Falling back to local suggestions.", error);
     return [];
   }
+}
+
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError;
+}
+
+export function getApiErrorMessage(error: unknown, fallbackMessage: string) {
+  if (error instanceof ApiError) {
+    return error.detail || error.message || fallbackMessage;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
+
+async function throwApiError(res: Response, fallbackMessage: string): Promise<never> {
+  let detail: string | undefined;
+
+  try {
+    detail = extractApiErrorDetail(await res.json());
+  } catch {
+    detail = undefined;
+  }
+
+  throw new ApiError(res.status, detail || `${fallbackMessage} (${res.status})`, detail);
+}
+
+function extractApiErrorDetail(payload: unknown): string | undefined {
+  if (typeof payload === "string") {
+    return payload;
+  }
+
+  if (Array.isArray(payload)) {
+    const messages = payload
+      .map((item) => extractApiErrorDetail(item))
+      .filter((value): value is string => Boolean(value));
+
+    return messages.length > 0 ? messages.join(" / ") : undefined;
+  }
+
+  if (!payload || typeof payload !== "object") {
+    return undefined;
+  }
+
+  const record = payload as Record<string, unknown>;
+
+  if ("detail" in record) {
+    return extractApiErrorDetail(record.detail);
+  }
+
+  if ("msg" in record && typeof record.msg === "string") {
+    return record.msg;
+  }
+
+  return undefined;
 }

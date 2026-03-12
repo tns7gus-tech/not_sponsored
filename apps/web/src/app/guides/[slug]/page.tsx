@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import AnalyticsViewTracker from "@/components/AnalyticsViewTracker";
+import BackButton from "@/components/BackButton";
 import { getGuideBySlug, GUIDES } from "@/lib/guides";
 import { SITE_NAME, getSiteUrl } from "@/lib/site";
 
@@ -62,27 +63,33 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
       <AnalyticsViewTracker eventType="page_view_guide_detail" details={{ slug: guide.slug }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
       <div className="mx-auto w-full max-w-4xl">
-        <Link
-          href="/guides"
-          className="inline-flex items-center gap-2 rounded-full border border-[#e5e8eb] bg-white px-4 py-2 text-sm text-[#4e5968] shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:bg-[#f8fafb]"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          가이드 목록으로
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <BackButton fallbackHref="/guides" />
+          <Link
+            href="/guides"
+            className="inline-flex items-center gap-2 rounded-full border border-[#d7dde5] bg-white px-4 py-2 text-sm font-semibold text-[#243240] shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:bg-[#f8fafb] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3182f61f]"
+          >
+            가이드 목록으로
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-full border border-[#d7dde5] bg-white px-4 py-2 text-sm font-semibold text-[#243240] shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:bg-[#f8fafb] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3182f61f]"
+          >
+            홈으로
+          </Link>
+        </div>
 
         <article className="mt-6 rounded-[32px] border border-[#e5e8eb] bg-white p-6 shadow-[0_18px_48px_rgba(15,23,42,0.06)] sm:p-8">
           <div className="flex flex-wrap gap-2">
             {guide.tags.map((tag) => (
-              <span key={tag} className="rounded-full bg-[#f2f4f6] px-3 py-1 text-xs text-[#4e5968]">
+              <span key={tag} className="rounded-full bg-[#eef2f6] px-3 py-1 text-xs font-medium text-[#243240]">
                 {tag}
               </span>
             ))}
           </div>
           <h1 className="mt-4 text-4xl font-semibold tracking-[-0.05em] text-[#191f28]">{guide.title}</h1>
-          <p className="mt-4 text-base leading-8 text-[#4e5968]">{guide.description}</p>
-          <div className="mt-5 flex flex-wrap gap-4 text-sm text-[#8b95a1]">
+          <p className="mt-4 text-base leading-8 text-[#334155]">{guide.description}</p>
+          <div className="mt-5 flex flex-wrap gap-4 text-sm font-medium text-[#5b6675]">
             <span>업데이트 {guide.updatedAt}</span>
             <span>읽는 시간 {guide.readTime}</span>
           </div>
@@ -91,13 +98,13 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
             {guide.sections.map((section) => (
               <section key={section.heading}>
                 <h2 className="text-2xl font-semibold tracking-[-0.03em] text-[#191f28]">{section.heading}</h2>
-                <div className="mt-4 space-y-4 text-base leading-8 text-[#333d4b]">
+                <div className="mt-4 space-y-4 text-base leading-8 text-[#27364a]">
                   {section.paragraphs.map((paragraph) => (
                     <p key={paragraph}>{paragraph}</p>
                   ))}
                 </div>
                 {section.bullets && (
-                  <ul className="mt-5 space-y-3 rounded-[24px] bg-[#f8fafb] p-5 text-sm leading-7 text-[#333d4b]">
+                  <ul className="mt-5 space-y-3 rounded-[24px] border border-[#e6ecf3] bg-[#f7f9fc] p-5 text-sm leading-7 text-[#27364a]">
                     {section.bullets.map((bullet) => (
                       <li key={bullet} className="flex items-start gap-3">
                         <span className="mt-2 h-2 w-2 rounded-full bg-[#3182f6]" aria-hidden="true" />
@@ -112,17 +119,20 @@ export default async function GuideDetailPage({ params }: { params: Promise<{ sl
 
           <div className="mt-10 rounded-[24px] border border-[#dbeafe] bg-[#f5f9ff] p-5">
             <h2 className="text-xl font-semibold text-[#191f28]">이 주제로 바로 리서치해보기</h2>
-            <p className="mt-3 text-sm leading-7 text-[#4e5968]">
+            <p className="mt-3 text-sm leading-7 text-[#334155]">
               가이드를 읽고 끝내지 말고, 아래 검색으로 실제 결과를 바로 확인해 보세요.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href={`/?q=${encodeURIComponent(guide.queryHint)}&source=guide`}
-                className="rounded-full bg-[#3182f6] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2272eb]"
+                className="rounded-full bg-[#3182f6] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#2272eb] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3182f61f]"
               >
                 {guide.queryHint} 검색하기
               </Link>
-              <Link href="/" className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#4e5968] transition hover:bg-[#eef4ff]">
+              <Link
+                href="/"
+                className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#243240] transition hover:bg-[#eef4ff] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3182f61f]"
+              >
                 홈으로 이동
               </Link>
             </div>

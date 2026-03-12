@@ -66,7 +66,7 @@ export default function HomeSampleSection() {
       <div className="rounded-[30px] border border-white/10 bg-[rgba(9,17,29,0.8)] p-5 shadow-[0_24px_72px_rgba(4,10,20,0.28)] backdrop-blur-xl sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs font-semibold tracking-[0.22em] text-slate-400">결과 미리 보기</p>
+            <p className="text-xs font-semibold tracking-[0.22em] text-slate-200">결과 미리 보기</p>
             <h2 id="sample-preview-title" className="mt-2 text-2xl font-semibold text-white">
               첫 화면에서 어떤 카드가 나오는지 바로 보여줍니다
             </h2>
@@ -76,7 +76,7 @@ export default function HomeSampleSection() {
           </span>
         </div>
 
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+        <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-100">
           요약, 근거 신호, 수집 범위가 한 카드 안에서 같이 보이면 서비스가 무엇을 주는지 몇 초 안에 이해할 수 있습니다.
         </p>
 
@@ -88,7 +88,7 @@ export default function HomeSampleSection() {
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-xs font-semibold tracking-[0.18em] text-slate-400">{sample.kind}</p>
+                  <p className="text-xs font-semibold tracking-[0.18em] text-slate-200">{sample.kind}</p>
                   <h3 className="mt-2 text-xl font-semibold text-white">{sample.query}</h3>
                 </div>
                 <span className={`self-start rounded-full border px-3 py-1 text-xs font-medium ${sample.badgeClassName}`}>
@@ -99,7 +99,7 @@ export default function HomeSampleSection() {
               <p className="mt-3 text-sm leading-6 text-slate-200">{sample.summary}</p>
 
               <div className="mt-4 rounded-2xl border border-white/8 bg-white/5 p-4">
-                <p className="text-xs font-semibold tracking-[0.18em] text-slate-400">보는 소스</p>
+                <p className="text-xs font-semibold tracking-[0.18em] text-slate-200">보는 소스</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {sample.sources.map((source) => (
                     <span
@@ -116,7 +116,7 @@ export default function HomeSampleSection() {
                 <ResultSignalGroups result={sample.result} compact />
               </div>
 
-              <p className="mt-3 text-xs leading-5 text-slate-400">{sample.note}</p>
+              <p className="mt-3 text-xs leading-5 text-slate-200">{sample.note}</p>
             </article>
           ))}
         </div>

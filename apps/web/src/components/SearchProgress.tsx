@@ -16,8 +16,8 @@ const WORKFLOW_STEPS = [
   { label: "네이버 수집", description: "블로그, 카페, 뉴스, 쇼핑 결과를 모읍니다." },
   { label: "유튜브 수집", description: "영상 제목과 설명, 채널 정보를 함께 확인합니다." },
   { label: "광고성 신호 분석", description: "제휴 링크, 제공 표현, 반복 CTA를 점검합니다." },
-  { label: "판단 요소 정리", description: "반복되는 장점과 단점을 묶어 요약합니다." },
-  { label: "리포트 생성", description: "근거 신호와 주의 신호를 카드로 정리합니다." },
+  { label: "반복 신호 묶기", description: "반복되는 장점과 단점을 묶어 요약합니다." },
+  { label: "결과 카드 정리", description: "근거 신호와 주의 신호를 카드로 정리합니다." },
 ] as const;
 
 export default function SearchProgress({ query, expandedQueries, progress }: Props) {
@@ -35,10 +35,10 @@ export default function SearchProgress({ query, expandedQueries, progress }: Pro
           <div>
             <p className="text-sm font-semibold text-[#6b7684]">검색 진행 중</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-[#191f28]">
-              {query} 관련 결과를 정리하고 있어요
+              {query}에 대한 공개 근거를 모으고 있어요
             </h2>
             <p className="mt-3 text-sm leading-6 text-[#6b7684]">
-              여러 소스에서 문장을 모으고 광고성 신호와 실사용 표현을 함께 보는 리포트로 묶는 과정입니다.
+              여러 소스에서 문장을 모으고 광고성 신호와 실사용 표현을 함께 읽을 수 있는 카드로 정리하는 단계입니다.
             </p>
           </div>
 
