@@ -7,14 +7,14 @@ export default function GuideHighlightsSection() {
     <section aria-labelledby="guide-highlights-title" className="mx-auto mt-14 w-full max-w-6xl">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold tracking-[0.22em] text-slate-200">공개 가이드</p>
-          <h2 id="guide-highlights-title" className="mt-2 text-2xl font-semibold text-white">
+          <p className="text-xs font-semibold tracking-[0.22em] text-[#6b7684]">공개 가이드</p>
+          <h2 id="guide-highlights-title" className="mt-2 text-2xl font-semibold text-[#191f28]">
             검색 유입을 위한 공개 콘텐츠
           </h2>
         </div>
         <Link
           href="/guides"
-          className="text-sm font-semibold text-cyan-100 transition hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
+          className="text-sm font-semibold text-[#1d4ed8] transition hover:text-[#1e40af] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3182f61f]"
         >
           전체 가이드 보기
         </Link>

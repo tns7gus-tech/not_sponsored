@@ -16,13 +16,10 @@ export default function DocumentPageLayout({ eyebrow, title, description, update
     <main id="main-content" className="min-h-screen px-4 py-6 sm:px-6 sm:py-10">
       <div className="mx-auto w-full max-w-4xl">
         <div className="flex flex-wrap gap-2">
-          <BackButton
-            fallbackHref="/"
-            className="inline-flex items-center gap-2 rounded-full border border-white/16 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/16 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
-          />
+          <BackButton fallbackHref="/" />
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-full border border-white/16 bg-white/8 px-4 py-2 text-sm font-semibold text-slate-100 transition hover:border-white/24 hover:bg-white/12 hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/20"
+            className="inline-flex items-center gap-2 rounded-full border border-[#d7dde5] bg-white px-4 py-2 text-sm font-semibold text-[#243240] shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:bg-[#f8fafb] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#3182f61f]"
           >
             홈으로 돌아가기
           </Link>
